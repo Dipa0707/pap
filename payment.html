@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .discount-row {
+            color: #28a745;
+            font-weight: 500;
+            border-top: 1px dashed #28a745;
+            border-bottom: 1px dashed #28a745;
+            padding: 8px 0;
+            margin: 8px 0;
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        #discount-code {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        #discount-value {
+            font-weight: bold;
+        }
+        
+        /* Estilos para preços com desconto */
+        .price-container {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+            font-size: 0.9em;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        
+        .discounted-price {
+            color: #e53e3e;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .discount-badge {
+            background-color: #e53e3e;
+            color: white;
+            padding: 2px 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+            border-radius: 3px;
+        }
+        
+        .order-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .item-image {
+            width: 60px;
+            margin-right: 15px;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-details h4 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+        }
+        
+        .order-summary {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        
+        .summary-totals {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        #order-items {
+            margin-bottom: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Estilos para os métodos de pagamento */
+        .payment-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .payment-option label {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .payment-option img {
+            height: 30px;
+            margin-right: 20px;
+            margin-left: 15px;
+        }
+
+        .payment-option input[type="radio"] {
+            margin-right: 15px;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <main class="checkout-container">
+        <!-- Progresso do checkout -->
+        <div class="checkout-progress">
+            <div class="progress-step">
+                <span class="step-number">1</span>
+                <span class="step-text">CARRINHO</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">2</span>
+                <span class="step-text">LOGIN</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">3</span>
+                <span class="step-text">ENVIO</span>
+            </div>
+            <div class="progress-step active">
+                <span class="step-number">4</span>
+                <span class="step-text">PAGAMENTO</span>
+            </div>
+        </div>
+
+        <div class="payment-content">
+            <div class="payment-methods">
+                <h2>Método de Pagamento</h2>
+                <div class="payment-options">
+                    <div class="payment-option">
+                        <input type="radio" id="mbway" name="payment" value="mbway" checked>
+                        <label for="mbway">
+                            <img src="mbway.png" alt="MB WAY">
+                            MB WAY
+                        </label>
+                    </div>
+                    <div class="payment-option">
+                        <input type="radio" id="card" name="payment" value="card">
+                        <label for="card">
+                            <img src="card-logo.png" alt="Cartão">
+                            Cartão de Crédito/Débito
+                        </label>
+                    </div>
+                </div>
+
+                <div id="payment-details" class="payment-details">
+                    <!-- Detalhes do método de pagamento serão mostrados aqui -->
+                </div>
+
+                <button onclick="processPayment()" class="complete-order-button">
+                    Finalizar Encomenda
+                </button>
+            </div>
+
+            <div class="order-summary">
+                <h2>Resumo da Encomenda</h2>
+                <div id="order-items">
+                    <!-- Items serão carregados aqui -->
+                </div>
+                <div class="summary-totals">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">0,00€</span>
+                    </div>
+                    <div class="summary-row discount-row" id="discount-row" style="display: none; color: #28a745;">
+                        <span>Desconto <span id="discount-code"></span></span>
+                        <span id="discount-value">-0,00€</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Envio</span>
+                        <span id="shipping-cost">Grátis</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="total">0,00€</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Add debugging logs to track the flow
+        console.log("Payment page loaded");
+        
+        // Verificar autenticação
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                console.log("User not logged in, redirecting to login page");
+                window.location.href = 'login.html';
+            } else {
+                console.log("User logged in:", user.email);
+            }
+        });
+
+        // Mostrar detalhes do método de pagamento e carregar resumo do pedido
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM content loaded, initializing payment page");
+            
+            // Verificar se o carrinho existe no localStorage
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            console.log("Cart contents:", cart);
+            
+            if (cart.length === 0) {
+                console.log("Cart is empty!");
+                const orderSummary = document.querySelector('.order-summary');
+                const debugInfo = document.createElement('div');
+                debugInfo.style.color = 'red';
+                debugInfo.innerHTML = '<p>Carrinho vazio! Por favor, adicione produtos ao carrinho.</p>';
+                orderSummary.appendChild(debugInfo);
+            } else {
+                // Load order summary if cart is not empty
+                loadOrderSummary();
+            }
+            
+            // Set up payment method change handlers
+            const paymentMethods = document.querySelectorAll('input[name="payment"]');
+            const paymentDetails = document.getElementById('payment-details');
+
+            // Initialize payment details with MB WAY form (default option)
+            paymentDetails.innerHTML = `
+                <div class="mbway-details">
+                    <div class="form-group">
+                        <label for="phone">Número de Telemóvel</label>
+                        <input type="tel" id="phone" placeholder="9xx xxx xxx" required>
+                    </div>
+                </div>
+            `;
+
+            paymentMethods.forEach(method => {
+                method.addEventListener('change', () => {
+                    console.log("Payment method changed to:", method.value);
+                    switch(method.value) {
+                        case 'card':
+                            paymentDetails.innerHTML = `
+                                <div class="card-details">
+                                    <div class="form-group">
+                                        <label for="cardNumber">Número do Cartão</label>
+                                        <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="expiry">Data de Validade</label>
+                                        <input type="text" id="expiry" placeholder="MM/AA" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cvv">CVV</label>
+                                        <input type="text" id="cvv" required>
+                                    </div>
+                                </div>
+                            `;
+                            break;
+                        case 'mbway':
+                            paymentDetails.innerHTML = `
+                                <div class="mbway-details">
+                                    <div class="form-group">
+                                        <label for="phone">Número de Telemóvel</label>
+                                        <input type="tel" id="phone" placeholder="9xx xxx xxx" required>
+                                    </div>
+                                </div>
+                            `;
+                            break;
+                    }
+                });
+            });
+        });
+
+        // Função para processar o pagamento
+        async function processPayment() {
+            try {
+                console.log("Processing payment...");
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    throw new Error('Utilizador sem sessão iniciada');
+                }
+
+                const paymentMethod = document.querySelector('input[name="payment"]:checked');
+                if (!paymentMethod) {
+                    alert('Por favor, selecione um método de pagamento');
+                    return;
+                }
+
+                const cart = JSON.parse(localStorage.getItem('cart'));
+                if (!cart || cart.length === 0) {
+                    throw new Error('O carrinho está vazio');
+                }
+
+                const shippingData = JSON.parse(localStorage.getItem('shippingData'));
+                if (!shippingData) {
+                    throw new Error('Dados de envio não encontrados');
+                }
+
+                // Calcular total e preparar itens
+                let subtotal = 0;
+                const items = cart.map(item => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+                    
+                    // Garantir que todos os campos tenham valores válidos
+                    return {
+                        productId: item.id || '',
+                        name: item.name || '',
+                        price: item.price || 0,
+                        originalPrice: item.originalPrice || item.price || 0,
+                        discount: item.discount || 0,
+                        quantity: item.quantity || 1,
+                        size: item.selectedSize || null, // Usar null em vez de undefined
+                        subtotal: itemTotal || 0
+                    };
+                });
+
+                // Verificar desconto aplicado
+                const appliedDiscount = JSON.parse(sessionStorage.getItem('appliedDiscount'));
+                let total = subtotal;
+                let discountInfo = null;
+
+                if (appliedDiscount) {
+                    let discountAmount = 0;
+                    
+                    if (appliedDiscount.type === 'percentage') {
+                        discountAmount = subtotal * (appliedDiscount.value / 100);
+                    } else if (appliedDiscount.type === 'fixed') {
+                        discountAmount = Math.min(subtotal, appliedDiscount.value);
+                    }
+                    
+                    total = subtotal - discountAmount;
+                    
+                    // Garantir que o discountInfo tenha valores válidos
+                    discountInfo = {
+                        code: appliedDiscount.code || '',
+                        value: appliedDiscount.value || 0,
+                        type: appliedDiscount.type || 'fixed',
+                        discountAmount: discountAmount || 0
+                    };
+                }
+
+                // Garantir que shippingData tenha valores válidos
+                const validShippingData = {
+                    name: shippingData.name || '',
+                    address: shippingData.address || '',
+                    postalCode: shippingData.postalCode || '',
+                    city: shippingData.city || '',
+                    phone: shippingData.phone || ''
+                };
+
+                // Criar pedido com valores validados
+                const orderData = {
+                    userId: user.uid,
+                    userEmail: user.email,
+                    items: items,
+                    shipping: validShippingData,
+                    paymentMethod: paymentMethod.value,
+                    subtotal: subtotal || 0,
+                    discount: discountInfo, // Já validado acima
+                    total: total || 0,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // Remover campos undefined ou null antes de salvar
+                const cleanOrderData = JSON.parse(JSON.stringify(orderData));
+
+                console.log("Order data to be saved:", cleanOrderData);
+                const orderRef = await db.collection('orders').add(cleanOrderData);
+                console.log("Order saved with ID:", orderRef.id);
+
+                // Limpar dados locais
+                localStorage.removeItem('cart');
+                localStorage.removeItem('shippingData');
+                sessionStorage.removeItem('appliedDiscount');
+
+                // Redirecionar para confirmação
+                window.location.href = `order-confirmation.html?id=${orderRef.id}`;
+
+            } catch (error) {
+                console.error('Erro detalhado:', error);
+                alert('Erro ao processar o pagamento: ' + error.message);
+            }
+        }
+
+        // Função para carregar resumo do pedido
+        async function loadOrderSummary() {
+            try {
+                console.log("Loading order summary...");
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                console.log("Cart:", cart);
+                
+                if (cart.length === 0) {
+                    console.log("Cart is empty");
+                    return;
+                }
+                
+                let subtotal = 0;
+                const orderItems = document.getElementById('order-items');
+                orderItems.innerHTML = '';
+
+                for (const item of cart) {
+                    try {
+                        console.log("Processing cart item:", item.id);
+                        const itemTotal = item.price * item.quantity;
+                        subtotal += itemTotal;
+                        
+                        const hasDiscount = item.discount > 0;
+                        
+                        orderItems.innerHTML += `
+                            <div class="order-item">
+                                <div class="item-image">
+                                    <img src="${item.imageUrl}" alt="${item.name}">
+                                </div>
+                                <div class="item-details">
+                                    <h4>${item.name}</h4>
+                                    <p>Quantidade: ${item.quantity}</p>
+                                    ${item.selectedSize ? `<p>Tamanho: ${item.selectedSize}</p>` : ''}
+                                    ${hasDiscount ? `
+                                        <div class="price-container">
+                                            <span class="original-price">${item.originalPrice.toFixed(2)}€</span>
+                                            <span class="discount-badge">-${item.discount}%</span>
+                                            <span class="discounted-price">${item.price.toFixed(2)}€</span>
+                                        </div>
+                                    ` : `
+                                        <p class="price">${item.price.toFixed(2)}€</p>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    } catch (error) {
+                        console.error("Error processing cart item:", error);
+                    }
+                }
+
+                console.log("Calculated subtotal:", subtotal);
+                document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)}€`;
+                
+                // Verificar se há desconto adicional aplicado (código promocional)
+                const appliedDiscount = JSON.parse(sessionStorage.getItem('appliedDiscount'));
+                console.log("Applied discount:", appliedDiscount);
+                
+                let total = subtotal;
+                
+                if (appliedDiscount) {
+                    // Calcular o valor do desconto
+                    let discountAmount = 0;
+                    
+                    if (appliedDiscount.type === 'percentage') {
+                        discountAmount = subtotal * (appliedDiscount.value / 100);
+                        console.log("Percentage discount:", appliedDiscount.value + "%", "Amount:", discountAmount);
+                        
+                        // Mostrar a linha de desconto
+                        document.getElementById('discount-row').style.display = 'flex';
+                        document.getElementById('discount-code').textContent = `(${appliedDiscount.value}%)`;
+                        document.getElementById('discount-value').textContent = `-${discountAmount.toFixed(2)}€`;
+                    } else if (appliedDiscount.type === 'fixed') {
+                        discountAmount = Math.min(subtotal, appliedDiscount.value);
+                        console.log("Fixed discount:", discountAmount);
+                        
+                        // Mostrar a linha de desconto
+                        document.getElementById('discount-row').style.display = 'flex';
+                        document.getElementById('discount-code').textContent = '';
+                        document.getElementById('discount-value').textContent = `-${discountAmount.toFixed(2)}€`;
+                    }
+                    
+                    // Calcular o total com desconto
+                    total = subtotal - discountAmount;
+                }
+                
+                console.log("Final total:", total);
+                document.getElementById('total').textContent = `${total.toFixed(2)}€`;
+            } catch (error) {
+                console.error("Error loading order summary:", error);
+                alert('Erro ao carregar resumo da encomenda. Verifique a consola para mais detalhes.');
+            }
+        }
+    </script>
+    
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+</body>
+</html> 

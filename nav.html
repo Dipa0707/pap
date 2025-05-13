@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo.png" alt="Logo da Empresa" class="logo-image">
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li>
+                    <a href="index.html">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li><a href="produtos.html?categoria=canas">Canas</a></li>
+                <li><a href="produtos.html?categoria=carretos">Carretos</a></li>
+                <li><a href="produtos.html?categoria=roupa">Roupa</a></li>
+                <li><a href="produtos.html?categoria=outros">Outros</a></li>
+                <li><a href="produtos.html">Todos os Produtos</a></li>
+                <li><a href="contacte-nos.html">Contacte-nos</a></li>
+            </ul>
+            <div class="nav-icons">
+                <script>
+                    // Verificar se está na página inicial
+                    const path = window.parent.location.pathname;
+                    const isIndex = path.includes('index.html') || path.endsWith('/');
+                    
+                    if (isIndex) {
+                        document.write(`
+                            <a href="#" class="icon" id="authButton" onclick="window.parent.handleAuth()">
+                                <i class="fas fa-sign-in-alt"></i> 
+                                <span id="authText">Iniciar Sessão</span>
+                            </a>
+                        `);
+                    }
+                </script>
+                <a href="area.html" class="icon">
+                    <i class="fas fa-user"></i>
+                    <span>Área</span>
+                </a>
+                <a href="cart.html" class="icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </a>
+                <a href="admin.html" class="icon" id="adminLink" style="display: none;">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdPF1KwTeC5zzFbsLnkCvx6a2BmWt8iL8",
+            authDomain: "test-58408.firebaseapp.com",
+            projectId: "test-58408",
+            storageBucket: "test-58408.appspot.com",
+            messagingSenderId: "857029748739",
+            appId: "1:857029748739:web:5a85299a0343e54a118636",
+            measurementId: "G-M4YV7HB77W"
+        };
+
+        // Inicializar Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Função para lidar com clique no botão de autenticação
+        function handleAuthClick() {
+            const user = auth.currentUser;
+            if (user) {
+                // Se estiver logado, faz logout
+                auth.signOut().then(() => {
+                    console.log('Utilizador terminou sessão');
+                }).catch((error) => {
+                    console.error('Erro ao terminar sessão:', error);
+                });
+            } else {
+                // Se não estiver logado, abre o modal de login
+                window.parent.handleAuth();
+            }
+        }
+
+        // Verificar estado de autenticação e permissões
+        auth.onAuthStateChanged(function(user) {
+            const authText = document.getElementById('authText');
+            const adminLinks = document.querySelectorAll('#adminLink'); // Pegar todos os elementos com id adminLink
+
+            if (user) {
+                // Utilizador está logado
+                if (authText) {
+                    authText.textContent = 'Sair';
+                }
+                
+                // Verificar se é admin
+                db.collection('users').doc(user.uid)
+                    .get()
+                    .then((doc) => {
+                        if (doc.exists && doc.data().isAdmin === true) {
+                            // Mostrar todos os botões de admin
+                            adminLinks.forEach(link => {
+                                if (link) {
+                                    link.style.display = 'inline-block';
+                                }
+                            });
+                            localStorage.setItem('isAdmin', 'true');
+
+                            // Verificar localStorage ao carregar para manter consistência
+                            if (localStorage.getItem('isAdmin') === 'true') {
+                                adminLinks.forEach(link => {
+                                    if (link) {
+                                        link.style.display = 'inline-block';
+                                    }
+                                });
+                            }
+                        } else {
+                            // Esconder todos os botões de admin
+                            adminLinks.forEach(link => {
+                                if (link) {
+                                    link.style.display = 'none';
+                                }
+                            });
+                            localStorage.removeItem('isAdmin');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Erro ao verificar permissões de admin:", error);
+                    });
+            } else {
+                // Utilizador não está logado
+                if (authText) {
+                    authText.textContent = 'Iniciar Sessão';
+                }
+                // Esconder todos os botões de admin
+                adminLinks.forEach(link => {
+                    if (link) {
+                        link.style.display = 'none';
+                    }
+                });
+                localStorage.removeItem('isAdmin');
+            }
+        });
+
+        // Verificar localStorage ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            const adminLinks = document.querySelectorAll('#adminLink');
+            if (localStorage.getItem('isAdmin') === 'true') {
+                adminLinks.forEach(link => {
+                    if (link) {
+                        link.style.display = 'inline-block';
+                    }
+                });
+            }
+        });
+
+        // Função para atualizar contagem do carrinho
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            const cartCount = document.querySelector('.cart-count');
+            if (cartCount) {
+                cartCount.textContent = totalItems;
+            }
+        }
+
+        // Atualizar contagem quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartCount();
+        });
+
+        // Atualizar contagem do carrinho periodicamente
+        setInterval(updateCartCount, 500);
+    </script>
+</body>
+</html>

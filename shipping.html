@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envio - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .discount-row {
+            color: #28a745;
+            font-weight: 500;
+            border-top: 1px dashed #28a745;
+            border-bottom: 1px dashed #28a745;
+            padding: 8px 0;
+            margin: 8px 0;
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        #discount-code {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        #discount-value {
+            font-weight: bold;
+        }
+        
+        /* Estilos para preços com desconto */
+        .price-container {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+            font-size: 0.9em;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        
+        .discounted-price {
+            color: #e53e3e;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .discount-badge {
+            background-color: #e53e3e;
+            color: white;
+            padding: 2px 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+            border-radius: 3px;
+        }
+        
+        .order-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .item-image {
+            width: 60px;
+            margin-right: 15px;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-details h4 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+        }
+        
+        .cart-summary {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        
+        #order-items {
+            margin-bottom: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .summary-details {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <main class="checkout-container">
+        <!-- Progresso do checkout -->
+        <div class="checkout-progress">
+            <div class="progress-step">
+                <span class="step-number">1</span>
+                <span class="step-text">CARRINHO</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">2</span>
+                <span class="step-text">LOGIN</span>
+            </div>
+            <div class="progress-step active">
+                <span class="step-number">3</span>
+                <span class="step-text">ENVIO</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">4</span>
+                <span class="step-text">PAGAMENTO</span>
+            </div>
+        </div>
+
+        <div class="shipping-content">
+            <div class="shipping-form">
+                <h2>Morada de Entrega</h2>
+                <form id="shippingForm" onsubmit="handleShipping(event)">
+                    <div class="form-group">
+                        <label for="name">Nome Completo</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Morada</label>
+                        <input type="text" id="address" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="postalCode">Código Postal</label>
+                            <input type="text" id="postalCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="city">Cidade</label>
+                            <input type="text" id="city" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Telefone</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <button type="submit" class="continue-button">
+                        Continuar para Pagamento
+                    </button>
+                </form>
+            </div>
+
+            <div class="cart-summary">
+                <h2>Resumo da Encomenda</h2>
+                <div id="order-items">
+                    <!-- Items serão carregados aqui -->
+                </div>
+                <div class="summary-details">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">0,00€</span>
+                    </div>
+                    <div class="summary-row discount-row" id="discount-row" style="display: none; color: #28a745;">
+                        <span>Desconto <span id="discount-code"></span></span>
+                        <span id="discount-value">-0,00€</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Envio</span>
+                        <span>Grátis</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="total">0,00€</span>
+                        <span class="vat-info">IVA incl.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Verificar se utilizador está com sessão iniciada
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+            }
+        });
+
+        async function handleShipping(event) {
+            event.preventDefault();
+            const shippingData = {
+                name: document.getElementById('name').value,
+                address: document.getElementById('address').value,
+                postalCode: document.getElementById('postalCode').value,
+                city: document.getElementById('city').value,
+                phone: document.getElementById('phone').value
+            };
+
+            // Salvar dados de envio
+            localStorage.setItem('shippingData', JSON.stringify(shippingData));
+            window.location.href = 'payment.html';
+        }
+
+        // Função para carregar resumo do pedido
+        async function loadOrderSummary() {
+            try {
+                console.log("A carregar resumo da encomenda...");
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                console.log("Carrinho:", cart);
+                
+                if (cart.length === 0) {
+                    console.log("Carrinho vazio");
+                    return;
+                }
+                
+                let subtotal = 0;
+                const orderItems = document.getElementById('order-items');
+                orderItems.innerHTML = '';
+
+                for (const item of cart) {
+                    try {
+                        console.log("Processando item:", item.id);
+                        // Usar o preço armazenado no carrinho (que já inclui o desconto)
+                        const itemTotal = item.price * item.quantity;
+                        console.log("Item:", item.name, "Preço:", item.price, "Quantidade:", item.quantity, "Total:", itemTotal);
+                        subtotal += itemTotal;
+                        
+                        // Verificar se o produto tem desconto
+                        const hasDiscount = item.discount > 0;
+                        
+                        orderItems.innerHTML += `
+                            <div class="order-item">
+                                <div class="item-image">
+                                    <img src="${item.imageUrl}" alt="${item.name}">
+                                </div>
+                                <div class="item-details">
+                                    <h4>${item.name}</h4>
+                                    <p>Quantidade: ${item.quantity}</p>
+                                    ${hasDiscount ? `
+                                        <div class="price-container">
+                                            <span class="original-price">${item.originalPrice.toFixed(2)}€</span>
+                                            <span class="discount-badge">-${item.discount}%</span>
+                                            <span class="discounted-price">${item.price.toFixed(2)}€</span>
+                                        </div>
+                                    ` : `
+                                        <p class="price">${item.price.toFixed(2)}€</p>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    } catch (error) {
+                        console.error("Erro ao processar item do carrinho:", error);
+                    }
+                }
+
+                console.log("Subtotal calculado:", subtotal);
+                
+                // Atualizar subtotal
+                document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)}€`;
+                
+                // Verificar se há desconto adicional aplicado (código promocional)
+                const appliedDiscount = JSON.parse(sessionStorage.getItem('appliedDiscount'));
+                console.log("Desconto aplicado:", appliedDiscount);
+                
+                let total = subtotal;
+                
+                if (appliedDiscount) {
+                    // Calcular o valor do desconto
+                    let discountAmount = 0;
+                    
+                    if (appliedDiscount.type === 'percentage') {
+                        discountAmount = subtotal * (appliedDiscount.value / 100);
+                        console.log("Desconto percentual:", appliedDiscount.value + "%", "Valor:", discountAmount);
+                        
+                        // Mostrar a linha de desconto
+                        document.getElementById('discount-row').style.display = 'flex';
+                        document.getElementById('discount-code').textContent = `(${appliedDiscount.value}%)`;
+                        document.getElementById('discount-value').textContent = `-${discountAmount.toFixed(2)}€`;
+                    } else if (appliedDiscount.type === 'fixed') {
+                        discountAmount = Math.min(subtotal, appliedDiscount.value);
+                        console.log("Desconto fixo:", discountAmount);
+                        
+                        // Mostrar a linha de desconto
+                        document.getElementById('discount-row').style.display = 'flex';
+                        document.getElementById('discount-code').textContent = '';
+                        document.getElementById('discount-value').textContent = `-${discountAmount.toFixed(2)}€`;
+                    }
+                    
+                    // Calcular o total com desconto
+                    total = subtotal - discountAmount;
+                }
+                
+                console.log("Total final:", total);
+                
+                // Atualizar total
+                document.getElementById('total').textContent = `${total.toFixed(2)}€`;
+            } catch (error) {
+                console.error("Erro ao carregar resumo da encomenda:", error);
+            }
+        }
+
+        // Carregar resumo quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Página carregada, iniciando carregamento do resumo");
+            loadOrderSummary();
+        });
+    </script>
+    
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+</body>
+</html> 

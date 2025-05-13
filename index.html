@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Include Navigation -->
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+
+    <!---Pagina inicial-->
+    <main>
+        <div class="hero">
+            <h1>Loja de venda de produtos de pesca</h1>
+            <p>Pesque grandes momentos com os melhores equipamentos!</p>
+            <a href="produtos.html?categoria=todos" class="btn-inspiracional">Explore os nossos produtos</a>
+        </div>
+        
+        <!-- Categorias em destaque -->
+        <section class="featured-categories">
+            <div class="category-grid">
+                <a href="produtos.html?categoria=canas" class="category-card">
+                    <div class="category-image" style="background-image: url('C4.webp');">
+                        <h2>Canas</h2>
+                    </div>
+                </a>
+                <a href="produtos.html?categoria=carretos" class="category-card">
+                    <div class="category-image" style="background-image: url('C3.webp');">
+                        <h2>Carretos</h2>
+                    </div>
+                </a>
+                <a href="produtos.html?categoria=roupa" class="category-card">
+                    <div class="category-image" style="background-image: url('C22.webp');">
+                        <h2>Roupa</h2>
+                    </div>
+                </a>
+                <a href="produtos.html?categoria=outros" class="category-card">
+                    <div class="category-image" style="background-image: url('FUTURA2.jpg');">
+                        <h2>Outros</h2>
+                    </div>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Produtos em destaque -->
+        <section class="featured-products">
+            <h2>Produtos em Destaque</h2>
+            <div class="product-grid">
+                <!-- Primeiro produto em destaque -->
+                <div class="product-card" id="featured1">
+                    <div class="product-image">
+                        <img src="placeholder.jpg" alt="Produto em Destaque 1">
+                        <div class="product-overlay">
+                            <button class="quick-view">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalhes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3>Produto em Carregamento...</h3>
+                        <div class="product-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p class="price">€0.00</p>
+                        <button class="add-to-cart">
+                            <i class="fas fa-shopping-cart"></i>
+                            Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+                <!-- Segundo produto em destaque -->
+                <div class="product-card" id="featured2">
+                    <div class="product-image">
+                        <img src="placeholder.jpg" alt="Produto em Destaque 2">
+                        <div class="product-overlay">
+                            <button class="quick-view">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalhes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3>Produto em Carregamento...</h3>
+                        <div class="product-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="price">€0.00</p>
+                        <button class="add-to-cart">
+                            <i class="fas fa-shopping-cart"></i>
+                            Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="inspiracional">
+            <h2>Descubra a Arte da Pesca</h2>
+            <div class="inspiracional-grid">
+                <div class="inspiracional-item">
+                    <i class="fas fa-fish"></i>
+                    <h3>Sabedoria em Pesca</h3>
+                    <p>Criado por pescadores apaixonados, para pescadores exigentes.</p>
+                </div>
+                <div class="inspiracional-item">
+                    <i class="fas fa-star"></i>
+                    <h3>Experiências Únicas</h3>
+                    <p>Equipamentos selecionados para tornar cada pescaria memorável.</p>
+                </div>
+                <div class="inspiracional-item">
+                    <i class="fas fa-heart"></i>
+                    <h3>Mais que um Hobby</h3>
+                    <p>Pesca é paixão, é estilo de vida, é conexão com a natureza.</p>
+                </div>
+            </div>
+            <a href="produtos.html?categoria=todos" class="btn-inspiracional">Explore os nossos produtos</a>
+        </section>
+    </main>
+
+    <!-- footer -->
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+
+    <!-- Login e Registo -->
+    <div id="authModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAuthModal()">&times;</span>
+            <div id="loginForm">
+                <h2>Entrar</h2>
+                <form onsubmit="login(event)">
+                    <input type="email" id="loginEmail" placeholder="Email *" required>
+                    <input type="password" id="loginPassword" placeholder="Palavra-passe *" required>
+                    <button type="submit">Entrar</button>
+                    <button type="button" onclick="toggleForms()">Criar Conta</button>
+                </form>
+            </div>
+            <div id="signupForm" style="display:none;">
+                <h2>Criar Conta</h2>
+                <form onsubmit="signup(event)">
+                    <input type="text" id="signupName" placeholder="Nome completo *" required>
+                    <input type="email" id="signupEmail" placeholder="Email *" required>
+                    <input type="password" id="signupPassword" placeholder="Palavra-passe *" required>
+                    <input type="password" id="confirmPassword" placeholder="Confirmar palavra-passe *" required>
+                    <button type="submit">Registar</button>
+                    <button type="button" onclick="toggleForms()">Já tem uma conta? Entrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadFeaturedProducts);
+        
+        // Verificar estado de admin ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('isAdmin') === 'true') {
+                const adminLink = document.querySelector('#adminLink');
+                if (adminLink) {
+                    adminLink.style.display = 'inline-block';
+                }
+            }
+        });
+
+        // Adicionar no script do index.html
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se há parâmetro para abrir o login
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openLogin')) {
+                // Chamar sua função que abre o modal de login
+                showLoginModal(); // ou o nome da função que você usa para abrir o modal
+            }
+        });
+
+        // Adicionar este script após a definição do modal de autenticação
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auth')) {
+                // Mostrar o modal de autenticação
+                document.getElementById('authModal').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

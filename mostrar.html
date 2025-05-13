@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Produto - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        .price-container {
+            margin: 15px 0;
+        }
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+            font-size: 1.1em;
+            margin: 0 0 0 10px;
+            display: inline-block;
+        }
+        .discounted-price {
+            background-color: #e53e3e;
+            color: white;
+            font-weight: bold;
+            font-size: 1.4em;
+            padding: 5px 10px;
+            display: inline-block;
+        }
+        .discount-badge {
+            background-color: #333;
+            color: white;
+            padding: 2px 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .promo-label {
+            display: inline-block;
+            background-color: #e53e3e;
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .product-date {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .main-image {
+            position: relative;
+        }
+        .image-promo-label {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            background-color: #e53e3e;
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .product-brand {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .product-title {
+            margin-top: 0;
+        }
+        .size-section {
+            margin: 20px 0;
+        }
+
+        .size-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .size-guide {
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .size-guide:hover {
+            text-decoration: underline;
+        }
+
+        .size-selector {
+            margin: 15px 0;
+        }
+
+        .size-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .size-option {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .size-option:hover {
+            border-color: #1e3d59;
+            color: #1e3d59;
+        }
+
+        .size-option.selected {
+            background-color: #1e3d59;
+            color: white;
+            border-color: #1e3d59;
+        }
+
+        .size-option.unavailable {
+            opacity: 0.5;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .quantity-selector {
+            margin: 15px 0;
+        }
+
+        .quantity-selector input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 12px;
+            background: #1e3d59;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #2c5282;
+        }
+
+        .stock-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .stock-available {
+            color: #00a650;
+        }
+
+        .stock-limited {
+            color: #ff8c00;
+        }
+    </style>
+</head>
+<body>
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+
+    <main>
+        <div class="product-detail-container">
+            <a href="javascript:history.back()" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </a>
+            
+            <div class="product-detail">
+                <div class="product-images">
+                    <div class="main-image">
+                        <div id="promoLabel" class="image-promo-label" style="display: none;">PROMOÇÃO</div>
+                        <img id="productImage" src="" alt="Produto">
+                    </div>
+                </div>
+                
+                <div class="product-info">
+                    <div id="productBrand" class="product-brand"></div>
+                    <h1 id="productName" class="product-title"></h1>
+
+                    <div class="size-section">
+                        <div class="size-header">
+                            <span>Tamanho:</span>
+                            <a href="#" class="size-guide" onclick="showSizeGuide(event)">Guia de Tamanhos</a>
+                        </div>
+                        <div class="size-options" id="sizeOptions">
+                            <!-- Os tamanhos serão inseridos aqui dinamicamente -->
+                        </div>
+                    </div>
+
+                    <div class="product-price">
+                        <div id="priceContainer" class="price-container">
+                            <!-- Preço será preenchido dinamicamente -->
+                        </div>
+                    </div>
+
+                    <div class="product-reference">
+                        <p>Ref.: <span id="productRef"></span></p>
+                    </div>
+
+                    <div class="product-description">
+                        <p id="productDescription"></p>
+                    </div>
+
+                    <div class="product-actions">
+                        <button class="add-to-cart-btn" onclick="addToCart(currentProductId)">
+                            <i class="fas fa-shopping-cart"></i>
+                            Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+
+    <script src="script.js"></script>
+    <script>
+        let currentProductId = '';
+
+        // Função para obter parâmetros da URL
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Carregar detalhes do produto
+        async function loadProductDetails() {
+            const productId = getUrlParameter('id');
+            if (!productId) {
+                window.location.href = 'todos.html';
+                return;
+            }
+
+            currentProductId = productId;
+
+            try {
+                const doc = await db.collection('products').doc(productId).get();
+                if (doc.exists) {
+                    const product = doc.data();
+                    
+                    // Extrair marca (primeira palavra do nome do produto)
+                    const nameParts = product.name.split(' ');
+                    const brand = nameParts.length > 0 ? nameParts[0] : '';
+                    
+                    // Atualizar elementos da página
+                    document.getElementById('productBrand').textContent = brand;
+                    document.getElementById('productName').textContent = product.name;
+                    document.getElementById('productImage').src = product.imageUrl;
+                    document.getElementById('productDescription').textContent = product.description;
+                    document.getElementById('productRef').textContent = productId;
+                    
+                    // Mostrar etiqueta de promoção se aplicável
+                    if (product.discount) {
+                        document.getElementById('promoLabel').style.display = 'block';
+                    }
+                    
+                    // Renderizar tamanhos disponíveis
+                    const sizeOptions = document.getElementById('sizeOptions');
+                    if (product.sizes && Object.keys(product.sizes).length > 0) {
+                        // Ordenar tamanhos
+                        const sortedSizes = Object.entries(product.sizes)
+                            .sort((a, b) => {
+                                const numA = parseInt(a[0].match(/\d+/) || [0]);
+                                const numB = parseInt(b[0].match(/\d+/) || [0]);
+                                return numA - numB;
+                            });
+
+                        // Limpar opções existentes
+                        sizeOptions.innerHTML = '';
+
+                        // Adicionar cada tamanho como um botão
+                        sortedSizes.forEach(([size, isAvailable]) => {
+                            const sizeBtn = document.createElement('div');
+                            sizeBtn.className = `size-option${isAvailable ? '' : ' unavailable'}`;
+                            sizeBtn.textContent = size;
+                            
+                            if (isAvailable) {
+                                sizeBtn.onclick = function() {
+                                    // Remover seleção anterior
+                                    document.querySelectorAll('.size-option.selected').forEach(el => el.classList.remove('selected'));
+                                    // Selecionar novo tamanho
+                                    this.classList.add('selected');
+                                    selectedSize = size;
+                                };
+                            }
+                            
+                            sizeOptions.appendChild(sizeBtn);
+                        });
+
+                        document.querySelector('.size-section').style.display = 'block';
+                    } else {
+                        document.querySelector('.size-section').style.display = 'none';
+                    }
+                    
+                    // Calcular preço com desconto se aplicável
+                    const priceContainer = document.getElementById('priceContainer');
+                    if (product.discount) {
+                        const discountedPrice = product.price * (1 - product.discount / 100);
+                        priceContainer.innerHTML = `
+                            <span class="discounted-price">${discountedPrice.toFixed(2)}€</span>
+                            <span class="original-price">${product.price.toFixed(2)}€</span>
+                            <span class="discount-badge">-${product.discount}%</span>
+                            ${product.promoEndDate ? 
+                                `<p class="product-date">*De ${new Date().toLocaleDateString('pt-PT')} a ${new Date(product.promoEndDate).toLocaleDateString('pt-PT')} (excluído)</p>` : 
+                                ''}
+                        `;
+                    } else {
+                        priceContainer.innerHTML = `<span class="price">${product.price.toFixed(2)}€</span>`;
+                    }
+                    
+                    // Atualizar título da página
+                    document.title = `${product.name} - DanielFish`;
+                } else {
+                    window.location.href = 'todos.html';
+                }
+            } catch (error) {
+                console.error("Erro ao carregar produto:", error);
+                alert('Erro ao carregar detalhes do produto');
+            }
+        }
+
+        // Variável para armazenar o tamanho selecionado
+        let selectedSize = null;
+
+        // Função para mostrar o guia de tamanhos
+        function showSizeGuide(event) {
+            event.preventDefault();
+            // Aqui você pode implementar a lógica para mostrar o guia de tamanhos
+            alert('Guia de tamanhos em desenvolvimento!');
+        }
+
+        // Modificar a função addToCart para incluir o tamanho selecionado
+        async function addToCart(productId) {
+            try {
+                // Verificar se há tamanhos disponíveis e se um tamanho foi selecionado
+                const sizeSection = document.querySelector('.size-section');
+                if (sizeSection.style.display !== 'none' && !selectedSize) {
+                    alert('Por favor, selecione um tamanho antes de adicionar ao carrinho.');
+                    return;
+                }
+
+                // Obter o produto do Firestore
+                const doc = await db.collection('products').doc(productId).get();
+                if (!doc.exists) {
+                    throw new Error('Produto não encontrado');
+                }
+
+                const product = doc.data();
+                
+                // Criar item do carrinho
+                const cartItem = {
+                    id: productId,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1,
+                    selectedSize: selectedSize,
+                    imageUrl: product.imageUrl,
+                    discount: product.discount || 0
+                };
+
+                // Adicionar ao carrinho
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                cart.push(cartItem);
+                localStorage.setItem('cart', JSON.stringify(cart));
+
+                alert('Produto adicionado ao carrinho!');
+
+            } catch (error) {
+                console.error('Erro ao adicionar ao carrinho:', error);
+                alert('Erro ao adicionar ao carrinho: ' + error.message);
+            }
+        }
+
+        // Carregar produto quando a página carregar
+        document.addEventListener('DOMContentLoaded', loadProductDetails);
+    </script>
+</body>
+</html> 

@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrinho - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .discount-row {
+            color: #28a745;
+            font-weight: 500;
+            border-top: 1px dashed #28a745;
+            border-bottom: 1px dashed #28a745;
+            padding: 8px 0;
+            margin: 8px 0;
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        #discount-code {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        #discount-value {
+            font-weight: bold;
+        }
+        
+        .remove-code {
+            font-size: 0.8em;
+            color: #dc3545;
+            cursor: pointer;
+            margin-left: 5px;
+            text-decoration: underline;
+        }
+        
+        .remove-code:hover {
+            color: #bd2130;
+        }
+        
+        /* Estilos para preços com desconto no carrinho */
+        .price-container {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .original-price {
+            text-decoration: line-through;
+            color: #666;
+            font-size: 0.9em;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        
+        .discounted-price {
+            color: #e53e3e;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .discount-badge {
+            background-color: #e53e3e;
+            color: white;
+            padding: 2px 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+            border-radius: 3px;
+        }
+        
+        .cart-item {
+            display: grid;
+            grid-template-columns: 80px 1fr auto auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .cart-item img {
+            width: 80px;
+            height: auto;
+            object-fit: cover;
+        }
+        
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .item-details h3 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+        }
+        
+        .item-brand {
+            color: #666;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        
+        .cart-summary {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+        
+        .summary-details {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+        
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 1.2em;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+            margin-top: 10px;
+        }
+        
+        .checkout-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 0;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            text-transform: uppercase;
+            transition: background-color 0.3s;
+        }
+        
+        .checkout-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .vat-info {
+            font-size: 0.8em;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .selected-size {
+            background-color: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.9em;
+            color: #666;
+            display: inline-block;
+            margin: 8px 0;
+        }
+        
+        .item-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .price-quantity {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quantity-controls input {
+            width: 50px;
+            text-align: center;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .quantity-controls button {
+            background: #f0f0f0;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .quantity-controls button:hover {
+            background: #e0e0e0;
+        }
+        
+        .price {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .remove-btn {
+            color: #dc3545;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+        }
+        
+        .remove-btn:hover {
+            color: #c82333;
+        }
+        
+        .quantity-input {
+            width: 40px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            padding: 0;
+            margin: 0 8px;
+            pointer-events: none;
+            appearance: textfield; /* Propriedade padrão */
+            -moz-appearance: textfield; /* Firefox */
+            -webkit-appearance: textfield; /* Safari/Chrome */
+        }
+        
+        /* Remove as setas do input number */
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .quantity-btn {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            transition: all 0.2s;
+        }
+        
+        .quantity-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .size-selector {
+            margin: 8px 0;
+        }
+        
+        .size-select {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        
+        .size-select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .empty-cart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 20px;
+            text-align: center;
+        }
+        
+        .empty-cart p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .empty-cart .continue-shopping {
+            background-color: #1e3d59;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        
+        .empty-cart .continue-shopping:hover {
+            background-color: #2c5282;
+        }
+    </style>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="script.js"></script>
+    <script src="productManager.js"></script>
+</head>
+<body>
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <!-- Adicionar o modal de login -->
+    <div id="authModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAuthModal()">&times;</span>
+            <div id="loginForm">
+                <h2>Entrar</h2>
+                <form onsubmit="login(event)">
+                    <input type="email" id="loginEmail" placeholder="Email *" required>
+                    <input type="password" id="loginPassword" placeholder="Palavra-passe *" required>
+                    <button type="submit">Entrar</button>
+                    <button type="button" onclick="toggleForms()">Criar Conta</button>
+                </form>
+            </div>
+            <div id="signupForm" style="display:none;">
+                <h2>Criar Conta</h2>
+                <form onsubmit="signup(event)">
+                    <input type="text" id="signupName" placeholder="Nome completo *" required>
+                    <input type="email" id="signupEmail" placeholder="Email *" required>
+                    <input type="password" id="signupPassword" placeholder="Palavra-passe *" required>
+                    <input type="password" id="confirmPassword" placeholder="Confirmar palavra-passe *" required>
+                    <button type="submit">Registar</button>
+                    <button type="button" onclick="toggleForms()">Já tem uma conta? Entrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <main class="cart-container">
+        <!-- Progresso do checkout -->
+        <div class="checkout-progress">
+            <div class="progress-step active">
+                <span class="step-number">1</span>
+                <span class="step-text">CARRINHO</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">2</span>
+                <span class="step-text">LOGIN</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">3</span>
+                <span class="step-text">ENVIO</span>
+            </div>
+            <div class="progress-step">
+                <span class="step-number">4</span>
+                <span class="step-text">PAGAMENTO</span>
+            </div>
+        </div>
+
+        <div class="cart-content">
+            <!-- Lado esquerdo - Lista de produtos -->
+            <div class="cart-items">
+                <h2>Carrinho</h2>
+                <div id="cart-products">
+                    <!-- Produtos serão carregados aqui dinamicamente -->
+                </div>
+                <button class="continue-shopping" onclick="window.location.href='produtos.html?categoria=todos'">
+                    Voltar para a loja
+                </button>
+            </div>
+
+            <!-- Lado direito - Resumo da encomenda -->
+            <div class="cart-summary">
+                <h2>Resumo da Encomenda</h2>
+                <div class="summary-details">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">0,00€</span>
+                    </div>
+                    <div class="summary-row discount-row" id="discount-row" style="display: none; color: #28a745;">
+                        <span>Desconto <span id="discount-code"></span></span>
+                        <span id="discount-value">-0,00€</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Envio</span>
+                        <span>Calculado no próximo passo</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="total">0,00€</span>
+                        <span class="vat-info">IVA incl.</span>
+                    </div>
+                </div>
+
+                <button onclick="proceedToCheckout()" class="checkout-button">
+                    Efetuar a compra
+                </button>
+
+                <div class="promo-code">
+                    <button class="promo-toggle" onclick="togglePromoCode()">
+                        Código promocional <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="promo-input" style="display: none;">
+                        <input type="text" id="promoCodeInput" placeholder="Inserir código">
+                        <button onclick="applyPromoCode()">Aplicar</button>
+                    </div>
+                </div>
+
+                <div class="shipping-info">
+                    <i class="fas fa-truck"></i>
+                    <div>
+                        <strong>ENTREGAS AO DOMICÍLIO GRÁTIS</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Função para alternar visibilidade do campo de código promocional
+        function togglePromoCode() {
+            const promoInput = document.querySelector('.promo-input');
+            promoInput.style.display = promoInput.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // Variáveis para controlar o desconto
+        let appliedDiscount = null;
+        let originalTotal = 0;
+
+        // Função para aplicar código promocional
+        async function applyPromoCode() {
+            const promoCode = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+            
+            if (!promoCode) {
+                alert('Por favor, insira um código promocional.');
+                return;
+            }
+
+            try {
+                // Verificar se o código existe e está válido
+                const codeSnapshot = await db.collection('discountCodes')
+                    .where('code', '==', promoCode)
+                    .where('status', '==', 'active')
+                    .get();
+
+                if (codeSnapshot.empty) {
+                    alert('Código promocional inválido ou expirado.');
+                    return;
+                }
+
+                const discountDoc = codeSnapshot.docs[0];
+                const discount = discountDoc.data();
+                
+                // Verificar se o código está dentro do período válido
+                const now = new Date();
+                
+                if (discount.startDate && new Date(discount.startDate) > now) {
+                    alert('Este código promocional ainda não está ativo.');
+                    return;
+                }
+                
+                if (discount.endDate && new Date(discount.endDate) < now) {
+                    alert('Este código promocional já expirou.');
+                    return;
+                }
+                
+                // Verificar se o código atingiu o limite de uso
+                if (discount.usageLimit && discount.usageCount >= discount.usageLimit) {
+                    alert('Este código promocional atingiu o limite de utilizações.');
+                    return;
+                }
+
+                // Guardar o total original se ainda não tiver sido guardado
+                if (!originalTotal) {
+                    originalTotal = parseFloat(document.getElementById('total').textContent);
+                }
+                
+                // Aplicar o desconto
+                let newTotal = originalTotal;
+                let discountAmount = 0;
+                
+                if (discount.type === 'percentage') {
+                    discountAmount = originalTotal * (discount.value / 100);
+                    newTotal = originalTotal - discountAmount;
+                    
+                    // Mostrar a linha de desconto
+                    document.getElementById('discount-row').style.display = 'flex';
+                    document.getElementById('discount-code').textContent = `(${discount.value}%)`;
+                    document.getElementById('discount-value').textContent = `-${discountAmount.toFixed(2)}€`;
+                } else if (discount.type === 'fixed') {
+                    discountAmount = Math.min(originalTotal, discount.value);
+                    newTotal = originalTotal - discountAmount;
+                    
+                    // Mostrar a linha de desconto
+                    document.getElementById('discount-row').style.display = 'flex';
+                    document.getElementById('discount-code').textContent = '';
+                    document.getElementById('discount-value').textContent = `-${discountAmount.toFixed(2)}€`;
+                }
+                
+                // Atualizar o total na interface
+                document.getElementById('total').textContent = `${newTotal.toFixed(2)}€`;
+                
+                // Mostrar mensagem de sucesso
+                alert(`Código promocional "${promoCode}" aplicado com sucesso!`);
+                
+                // Guardar o desconto aplicado para uso posterior
+                appliedDiscount = {
+                    id: discountDoc.id,
+                    code: discount.code,
+                    value: discount.value,
+                    type: discount.type
+                };
+                
+                // Adicionar informação visual de que o desconto foi aplicado
+                const promoToggle = document.querySelector('.promo-toggle');
+                promoToggle.innerHTML = `Código aplicado: ${promoCode} <i class="fas fa-check"></i> <span class="remove-code" onclick="removeDiscount(event)">[remover]</span>`;
+                promoToggle.style.color = '#28a745';
+                
+                // Esconder o input do código
+                document.querySelector('.promo-input').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Erro ao aplicar código promocional:', error);
+                alert('Ocorreu um erro ao aplicar o código promocional. Por favor, tente novamente.');
+            }
+        }
+
+        // Função para carregar itens do carrinho
+        async function loadCartItems() {
+            const cartProducts = document.getElementById('cart-products');
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // Resetar variáveis de desconto
+            appliedDiscount = null;
+            originalTotal = 0;
+            document.getElementById('discount-row').style.display = 'none';
+            const promoToggle = document.querySelector('.promo-toggle');
+            promoToggle.innerHTML = `Código promocional <i class="fas fa-chevron-down"></i>`;
+            promoToggle.style.color = '';
+
+            if (cart.length === 0) {
+                cartProducts.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart" style="font-size: 80px; color: #ddd; margin-bottom: 20px;"></i>
+                        <p>O carrinho está vazio!</p>
+                        <button onclick="window.location.href='produtos.html?categoria=todos'" class="continue-shopping">
+                            Continuar a comprar
+                        </button>
+                    </div>
+                `;
+                document.getElementById('subtotal').textContent = '0,00€';
+                document.getElementById('total').textContent = '0,00€';
+                
+                // Esconder o botão inferior de continuar a comprar
+                const bottomButton = document.querySelector('.cart-items > .continue-shopping');
+                if (bottomButton) {
+                    bottomButton.style.display = 'none';
+                }
+                return;
+            }
+
+            cartProducts.innerHTML = '';
+            let total = 0;
+
+            for (const item of cart) {
+                try {
+                    const doc = await db.collection('products').doc(item.id).get();
+                    if (doc.exists) {
+                        const product = doc.data();
+                        // Usar números com maior precisão
+                        const itemTotal = (item.price * item.quantity);
+                        total += itemTotal;
+
+                        // Verificar se o produto tem desconto
+                        const hasDiscount = item.discount > 0;
+                        
+                        // Extrair marca (primeira palavra do nome do produto)
+                        const nameParts = item.name.split(' ');
+                        const brand = nameParts.length > 0 ? nameParts[0] : '';
+                        
+                        cartProducts.innerHTML += `
+                            <div class="cart-item" id="cart-item-${item.id}-${item.selectedSize}">
+                                <img src="${item.imageUrl}" alt="${item.name}">
+                                <div class="item-details">
+                                    <div class="item-header">
+                                        <h3>${item.name}</h3>
+                                    </div>
+                                    ${product.sizes && Object.keys(product.sizes).length > 0 ? `
+                                        <div class="size-selector">
+                                            <select onchange="updateSize('${item.id}', '${item.selectedSize}', this.value)" class="size-select">
+                                                <option value="">Selecione o tamanho</option>
+                                                ${Object.entries(product.sizes)
+                                                    .filter(([size, isAvailable]) => isAvailable)
+                                                    .sort((a, b) => {
+                                                        const numA = parseInt(a[0].match(/\d+/) || [0]);
+                                                        const numB = parseInt(b[0].match(/\d+/) || [0]);
+                                                        return numA - numB;
+                                                    })
+                                                    .map(([size, _]) => 
+                                                        `<option value="${size}" ${item.selectedSize === size ? 'selected' : ''}>${size}</option>`
+                                                    ).join('')
+                                                }
+                                            </select>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div class="quantity-controls">
+                                    <button onclick="updateQuantity('${item.id}', '${item.selectedSize}', ${item.quantity - 1})" class="quantity-btn">−</button>
+                                    <input type="number" 
+                                           value="${item.quantity}" 
+                                           min="1" 
+                                           onchange="updateQuantity('${item.id}', '${item.selectedSize}', parseInt(this.value))" 
+                                           class="quantity-input">
+                                    <button onclick="updateQuantity('${item.id}', '${item.selectedSize}', ${item.quantity + 1})" class="quantity-btn">+</button>
+                                </div>
+                                <p class="item-total">${itemTotal.toFixed(2)}€</p>
+                                <button class="remove-item" onclick="removeFromCart('${item.id}', '${item.selectedSize}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar produto:", error);
+                }
+            }
+
+            // Atualizar os totais mantendo a precisão
+            document.getElementById('subtotal').textContent = `${total.toFixed(2)}€`;
+            document.getElementById('total').textContent = `${total.toFixed(2)}€`;
+        }
+
+        // Carregar itens quando a página carregar
+        document.addEventListener('DOMContentLoaded', loadCartItems);
+
+        // Modificar a função proceedToCheckout
+        async function proceedToCheckout() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cart.length === 0) {
+                alert('O carrinho está vazio!');
+                return;
+            }
+            
+            try {
+                // Verificar tamanhos
+                for (const item of cart) {
+                    const doc = await db.collection('products').doc(item.id).get();
+                    const product = doc.data();
+                    
+                    if (product.sizes && Object.keys(product.sizes).length > 0 && !item.selectedSize) {
+                        alert('Por favor, selecione o tamanho para todos os produtos que necessitam de tamanho.');
+                        return;
+                    }
+                }
+                
+                // Salvar desconto se aplicado
+                if (appliedDiscount) {
+                    sessionStorage.setItem('appliedDiscount', JSON.stringify(appliedDiscount));
+                    
+                    db.collection('discountCodes').doc(appliedDiscount.id).update({
+                        usageCount: firebase.firestore.FieldValue.increment(1)
+                    }).catch(error => {
+                        console.error('Erro ao atualizar contador de uso do código:', error);
+                    });
+                }
+                
+                // Verificar se o usuário está logado
+                const user = firebase.auth().currentUser;
+                if (user) {
+                    // Se estiver logado, prosseguir para o envio
+                    window.location.href = 'shipping.html';
+                } else {
+                    // Se não estiver logado, mostrar o modal de login
+                    document.getElementById('authModal').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao verificar produtos:', error);
+                alert('Ocorreu um erro ao processar o checkout. Por favor, tente novamente.');
+            }
+        }
+
+        // Função para remover o desconto aplicado
+        function removeDiscount(event) {
+            // Impedir que o evento de clique se propague para o botão pai
+            event.stopPropagation();
+            
+            // Resetar o desconto
+            appliedDiscount = null;
+            
+            // Remover o desconto do sessionStorage
+            sessionStorage.removeItem('appliedDiscount');
+            
+            // Restaurar o total original
+            if (originalTotal > 0) {
+                document.getElementById('total').textContent = `${originalTotal.toFixed(2)}€`;
+            }
+            
+            // Esconder a linha de desconto
+            document.getElementById('discount-row').style.display = 'none';
+            
+            // Restaurar o botão de código promocional
+            const promoToggle = document.querySelector('.promo-toggle');
+            promoToggle.innerHTML = `Código promocional <i class="fas fa-chevron-down"></i>`;
+            promoToggle.style.color = '';
+            
+            // Limpar o campo de entrada
+            document.getElementById('promoCodeInput').value = '';
+            
+            // Mostrar feedback
+            alert('Código promocional removido.');
+        }
+
+        // Função para atualizar o tamanho
+        function updateSize(productId, oldSize, newSize) {
+            if (!newSize) {
+                alert('Por favor, selecione um tamanho.');
+                return;
+            }
+            
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const itemIndex = cart.findIndex(item => 
+                item.id === productId && item.selectedSize === oldSize
+            );
+            
+            if (itemIndex !== -1) {
+                cart[itemIndex].selectedSize = newSize;
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCartItems();
+            }
+        }
+
+        // Função para atualizar a quantidade
+        function updateQuantity(productId, selectedSize, newQuantity) {
+            if (newQuantity < 1) return;
+            
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const itemIndex = cart.findIndex(item => 
+                item.id === productId && item.selectedSize === selectedSize
+            );
+            
+            if (itemIndex !== -1) {
+                cart[itemIndex].quantity = newQuantity;
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCartItems();
+            }
+        }
+
+        // Função para remover item do carrinho
+        function removeFromCart(productId, selectedSize) {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            
+            // Encontrar o índice do item específico (mesmo ID e mesmo tamanho)
+            const itemIndex = cart.findIndex(item => 
+                item.id === productId && item.selectedSize === selectedSize
+            );
+            
+            if (itemIndex !== -1) {
+                cart.splice(itemIndex, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCartItems();
+            }
+        }
+
+        // Adicionar funções do modal de autenticação
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function toggleForms() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+            signupForm.style.display = signupForm.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function login(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                closeAuthModal();
+                window.location.href = 'shipping.html';
+            } catch (error) {
+                alert('Erro ao fazer login: ' + error.message);
+            }
+        }
+
+        async function signup(event) {
+            event.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('As palavras-passe não coincidem');
+                return;
+            }
+
+            try {
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: name });
+                
+                // Criar documento do utilizador
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    createdAt: new Date()
+                });
+
+                closeAuthModal();
+                window.location.href = 'shipping.html';
+            } catch (error) {
+                alert('Erro ao criar conta: ' + error.message);
+            }
+        }
+    </script>
+
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+</body>
+</html> 

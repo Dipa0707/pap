@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacte-nos - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <style>
+        main {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 0 20px;
+            min-height: 100vh;
+        }
+
+        .contact-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .contact-header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            color: #1e3d59;
+        }
+
+        .contact-header p {
+            color: #666;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .contact-form {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1e3d59;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: calc(100% - 36px); /* Ajuste para compensar o padding */
+            padding: 15px 18px;
+            border: 2px solid #e1e8f0;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+            color: #1e3d59;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2c5282;
+            box-shadow: 0 0 0 4px rgba(44, 82, 130, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 18px;
+            background: #1e3d59;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        button[type="submit"]:hover {
+            background: #2c5282;
+            box-shadow: 0 5px 15px rgba(44, 82, 130, 0.2);
+        }
+
+        button[type="submit"] i {
+            font-size: 1.3rem;
+        }
+
+        .contact-info {
+            margin-top: 40px;
+            padding: 25px 40px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .info-item i {
+            font-size: 1.2rem;
+            color: #1e3d59;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-item div {
+            flex: 1;
+        }
+
+        .info-item h3 {
+            margin: 0;
+            color: #1e3d59;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .info-item p {
+            margin: 3px 0 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .contact-form {
+                padding: 25px;
+            }
+
+            .form-group input,
+            .form-group textarea {
+                width: calc(100% - 30px);
+                padding: 12px 15px;
+            }
+
+            .contact-header h1 {
+                font-size: 2.2rem;
+            }
+
+            .contact-info {
+                padding: 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Navigation -->
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <main>
+        <div class="contact-header">
+            <h1>Entre em Contacto Connosco</h1>
+            <p>Estamos aqui para ajudar! Envie-nos a sua mensagem e responderemos o mais brevemente possível.</p>
+        </div>
+
+        <form id="contactForm" class="contact-form" onsubmit="sendMessage(event)">
+            <div class="form-group">
+                <label for="name">Nome Completo</label>
+                <input type="text" id="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Mensagem</label>
+                <textarea id="message" required></textarea>
+            </div>
+
+            <button type="submit">
+                <i class="fas fa-paper-plane"></i>
+                Enviar Mensagem
+            </button>
+        </form>
+
+        <div class="contact-info">
+            <div class="info-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <h3>Localização</h3>
+                    <p>Rua Augusta, 33</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                    <h3>Telefone</h3>
+                    <p>+351 935 157 761</p>
+                </div>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <h3>Email</h3>
+                    <p>info@danielfish.pt</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+    apiKey: "AIzaSyDdPF1KwTeC5zzFbsLnkCvx6a2BmWt8iL8",
+    authDomain: "test-58408.firebaseapp.com",
+    projectId: "test-58408",
+    storageBucket: "test-58408.appspot.com",
+    messagingSenderId: "857029748739",
+    appId: "1:857029748739:web:5a85299a0343e54a118636",
+    measurementId: "G-M4YV7HB77W"
+};
+        // Inicializar Firebase e Firestore
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            console.log("Firebase e Firestore inicializados com sucesso");
+        } catch (error) {
+            console.error('Erro ao inicializar Firebase:', error);
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+            
+            try {
+                if (!db) {
+                    throw new Error('Firestore não está inicializado. Por favor, recarregue a página.');
+                }
+
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const message = document.getElementById('message').value;
+
+                console.log("Tentar enviar mensagem...");
+                
+                const docRef = await db.collection('messages').add({
+                    name: name,
+                    email: email,
+                    message: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'pending',
+                    adminResponse: null,
+                    adminNotes: null
+                });
+
+                console.log("Mensagem enviada com sucesso. ID:", docRef.id);
+                alert('Mensagem enviada com sucesso!');
+                document.getElementById('contactForm').reset();
+            } catch (error) {
+                console.error("Erro detalhado ao enviar mensagem:", error);
+                alert(`Erro ao enviar mensagem: ${error.message}`);
+            }
+        }
+    </script>
+    
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+</body>
+</html>

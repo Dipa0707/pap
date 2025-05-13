@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Admin - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <style>
+        .forms-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .forms-container.show-featured {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .featured-products {
+            display: none;
+        }
+
+        .forms-container.show-featured .featured-products {
+            display: block;
+        }
+
+        .toggle-featured {
+            background: linear-gradient(135deg, #1e3d59, #2c5282) !important;
+            color: white !important;
+            padding: 10px 25px !important;
+            border: none !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            cursor: pointer !important;
+            width: auto !important;
+            margin: 10px 5px !important;
+        }
+
+        .toggle-featured:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+        }
+
+        .admin-hero {
+            background: linear-gradient(135deg, #1e3d59, #2196F3);
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .admin-hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .admin-hero p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .product-list {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-bottom: 40px;
+        }
+
+        #productsList {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .product-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(to right bottom, #ffffff, #f8f9fa);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            margin: 0;
+        }
+
+        .product-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.15);
+        }
+
+        .product-item img {
+            width: 60px; /* Tamanho menor da imagem */
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .product-item h3 {
+            font-size: 1.2em;
+            margin: 0;
+            flex-grow: 1; /* Para ocupar o espaço disponível */
+        }
+
+        .product-item p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .product-item button.delete-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .product-item button.delete-btn:hover {
+            background: linear-gradient(135deg, #c82333, #dc3545);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .product-item button.edit-btn {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .product-item button.edit-btn:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(44, 82, 130, 0.3);
+        }
+
+        /* Estilo do formulário de adicionar/editar produtos */
+        .product-form {
+            background: linear-gradient(to right bottom, #ffffff, #f8f9fa);
+            padding: 20px;
+            border-radius: 12px;
+            color: rgb(0, 0, 0);
+            margin: 20px 0;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .product-form h2 {
+            margin-bottom: 15px;
+        }
+
+        .product-form input,
+        .product-form select,
+        .product-form textarea {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .product-form button {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            width: auto;
+            margin: 10px 5px;
+        }
+
+        .product-form button:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .admin-panel {
+            background: #f8f9fa;
+            padding: 20px;
+        }
+
+        .nav-button {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 10px 25px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+
+        .nav-button:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .featured-button {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        .featured-button:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        nav a:hover {
+            background-color: #f0f2f5;
+        }
+        
+        nav a.active {
+            background-color: #f0f2f5;
+            color: #2c5282;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ef 100%);
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            min-height: calc(100vh - 40px);
+            margin-bottom: 20px;
+        }
+
+        .product-form {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            color: rgb(0, 0, 0);
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .search-filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-width: 150px;
+            font-size: 1em;
+        }
+
+        .product-details {
+            flex-grow: 1;
+        }
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 0.9em;
+        }
+        .discounted-price {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        .discount-badge {
+            background-color: #e53e3e;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .size-inputs {
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .size-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .size-text {
+            flex: 1;
+            padding: 8px !important;
+            margin: 0 !important;
+        }
+
+        .add-size-btn {
+            padding: 8px 15px !important;
+            margin: 0 !important;
+            background: #4CAF50 !important;
+        }
+
+        .sizes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .size-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .size-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .size-text {
+            min-width: 100px;
+            font-weight: 500;
+        }
+
+        .size-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .remove-size {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            color: #dc3545;
+        }
+
+        .remove-size:hover {
+            background: #fee2e2;
+        }
+
+        .size-item:hover {
+            border-color: #2c5282;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex;">
+        <!-- Navbar Vertical -->
+        <nav style="
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            width: 250px;
+            min-height: 100vh;
+            padding: 20px 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        ">
+            <div style="
+                display: flex;
+                flex-direction: column;
+                padding: 0 20px;
+            ">
+                <a href="index.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-home"></i>
+                    Início
+                </a>
+                <a href="admin.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    background-color: #f0f2f5;
+                ">
+                    <i class="fas fa-plus"></i>
+                    Produtos
+                </a>
+                <a href="codigosadmin.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-tag"></i>
+                    Códigos de Desconto
+                </a>
+                <a href="pedidos.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-shopping-cart"></i>
+                    Consultar Pedidos
+                </a>
+                <a href="suporte.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-headset"></i>
+                    Apoio ao Cliente
+                </a>
+            </div>
+        </nav>
+
+        <!-- Conteúdo Principal -->
+        <main style="flex: 1; padding: 20px; margin-left: 250px;">
+            <div class="admin-container">
+                <!-- Container para formulários vem primeiro -->
+                <div class="forms-container">
+                    <!-- Formulário de produto -->
+                    <section class="product-form">
+                        <h2>Adicionar/Editar Produto</h2>
+                        <form id="productForm">
+                            <input type="hidden" id="productId">
+                            <input type="text" id="productName" placeholder="Nome do Produto" required>
+                            <select id="productCategory" required>
+                                <option value="">Categoria</option>
+                                <option value="canas">Canas</option>
+                                <option value="carretos">Carretos</option>
+                                <option value="roupa">Roupa</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                            <input type="number" id="productPrice" placeholder="Preço" step="0.01" required>
+                            <input type="number" id="productDiscount" placeholder="Desconto (%)" min="0" max="100" step="1">
+                            <div id="promoDateContainer" style="display: none;">
+                                <label for="promoEndDate">Data de fim da promoção:</label>
+                                <input type="date" id="promoEndDate">
+                            </div>
+                            <div id="sizesContainer">
+                                <h3>Tamanhos Disponíveis</h3>
+                                <div class="size-inputs">
+                                    <div class="size-row">
+                                        <input type="text" id="sizeInput" placeholder="Tamanho (ex: 38/39-S)" class="size-text">
+                                        <button type="button" id="addSizeBtn" class="add-size-btn">Adicionar</button>
+                                    </div>
+                                    <div id="sizesList" class="sizes-list">
+                                        <!-- Os tamanhos adicionados aparecerão aqui -->
+                                    </div>
+                                </div>
+                            </div>
+                            <textarea id="productDescription" placeholder="Descrição" required></textarea>
+                            <input type="file" id="productImage" accept="image/*">
+                            <button type="submit" id="submitButton">Adicionar Produto</button>
+                            <button type="button" id="toggleFeatured" class="toggle-featured">Mostrar Produtos em Destaque</button>
+                        </form>
+                    </section>
+
+                    <!-- Produtos em destaque -->
+                    <section class="featured-products">
+                        <h2>Produtos em Destaque (Página Inicial)</h2>
+                        <div class="featured-form">
+                            <h3>Destaque 1</h3>
+                            <select id="featured1" class="featured-select">
+                                <option value="">Selecione um produto</option>
+                            </select>
+
+                            <h3>Destaque 2</h3>
+                            <select id="featured2" class="featured-select">
+                                <option value="">Selecione um produto</option>
+                            </select>
+
+                            <button id="saveFeatured" class="featured-button">Salvar Destaques</button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Lista de produtos agora vem por último -->
+                <section class="product-list">
+                    <h2>Lista de Produtos</h2>
+                    <!-- Adicionar barra de busca e filtros -->
+                    <div class="search-filter-container">
+                        <input type="text" id="searchProducts" placeholder="Buscar produtos..." class="search-input">
+                        <select id="filterCategory" class="filter-select">
+                            <option value="">Todas as categorias</option>
+                            <option value="canas">Canas</option>
+                            <option value="carretos">Carretos</option>
+                            <option value="roupa">Roupa</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div id="productsList"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html> 

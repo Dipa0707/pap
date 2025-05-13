@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suporte - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        .message-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .message-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .message-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .message-content {
+            margin: 10px 0;
+        }
+
+        .message-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .message-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-resolved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-filter input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .search-filter select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .notes-section {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .notes-section h4 {
+            margin: 0 0 10px 0;
+            color: #1e3d59;
+        }
+
+        .admin-notes {
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        .admin-notes:focus {
+            outline: none;
+            border-color: #1e3d59;
+        }
+
+        .save-notes-btn {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            transition: all 0.3s ease;
+        }
+
+        .save-notes-btn:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex;">
+        <!-- Navbar Vertical -->
+        <nav style="
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            width: 250px;
+            min-height: 100vh;
+            padding: 20px 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        ">
+            <div style="
+                display: flex;
+                flex-direction: column;
+                padding: 0 20px;
+            ">
+                <a href="index.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-home"></i>
+                    Início
+                </a>
+                <a href="admin.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-plus"></i>
+                    Produtos
+                </a>
+                <a href="codigosadmin.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-tag"></i>
+                    Códigos de Desconto
+                </a>
+                <a href="pedidos.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-shopping-cart"></i>
+                    Consultar Pedidos
+                </a>
+                <a href="suporte.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    background-color: #f0f2f5;
+                ">
+                    <i class="fas fa-headset"></i>
+                    Apoio ao Cliente
+                </a>
+            </div>
+        </nav>
+
+        <!-- Conteúdo Principal -->
+        <main style="flex: 1; padding: 20px; margin-left: 250px;">
+            <div class="admin-container">
+                <h1>Mensagens de Apoio ao Cliente</h1>
+                
+                <div class="search-filter">
+                    <input type="text" id="searchMessages" placeholder="Pesquisar por mensagens...">
+                    <select id="filterStatus">
+                        <option value="all">Todos os estados</option>
+                        <option value="pending">Pendente</option>
+                        <option value="resolved">Resolvido</option>
+                    </select>
+                </div>
+
+                <div id="messagesList">
+                    <!-- As mensagens serão carregadas aqui dinamicamente -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdPF1KwTeC5zzFbsLnkCvx6a2BmWt8iL8",
+            authDomain: "test-58408.firebaseapp.com",
+            projectId: "test-58408",
+            storageBucket: "test-58408.appspot.com",
+            messagingSenderId: "857029748739",
+            appId: "1:857029748739:web:5a85299a0343e54a118636",
+            measurementId: "G-M4YV7HB77W"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Verificação de autenticação simplificada
+        firebase.auth().onAuthStateChanged(function(user) {
+            console.log('A verificar autenticação...');
+            
+            if (!user) {
+                console.log('Utilizador não está autenticado');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            console.log('Utilizador autenticado:', user.email);
+            
+            // Verificar se é admin
+            db.collection('users')
+                .doc(user.uid)
+                .get()
+                .then((doc) => {
+                    console.log('Documento do utilizador:', doc.exists ? 'encontrado' : 'não encontrado');
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        console.log('Dados do utilizador:', userData);
+                        console.log('É admin?', userData.isAdmin);
+                        
+                        if (userData.isAdmin) {
+                            console.log('Utilizador é admin, a carregar mensagens...');
+                            loadMessages();
+                            setupEventListeners();
+                        } else {
+                            console.log('Utilizador não é admin');
+                            window.location.href = 'index.html';
+                        }
+                    } else {
+                        console.log('Documento do utilizador não encontrado');
+                        window.location.href = 'index.html';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Erro ao verificar permissões:', error);
+                });
+        });
+
+        // Função para carregar mensagens atualizada
+        function loadMessages() {
+            const messagesList = document.getElementById('messagesList');
+            
+            db.collection('messages')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot((snapshot) => {
+                    messagesList.innerHTML = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const message = doc.data();
+                        const messageCard = `
+                            <div class="message-card" data-id="${doc.id}">
+                                <div class="message-header">
+                                    <h3>${message.name}</h3>
+                                    <span class="message-date">${new Date(message.timestamp?.toDate()).toLocaleDateString()}</span>
+                                </div>
+                                <div class="message-content">
+                                    <p><strong>Email:</strong> ${message.email}</p>
+                                    <p><strong>Mensagem:</strong> ${message.message}</p>
+                                    
+                                    <!-- Área de Notas -->
+                                    <div class="notes-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee;">
+                                        <h4>Comentários do Administrador:</h4>
+                                        <textarea 
+                                            class="admin-notes" 
+                                            data-message-id="${doc.id}"
+                                            style="width: 100%; min-height: 80px; padding: 8px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px;"
+                                            placeholder="Adicione notas sobre este caso..."
+                                        >${message.adminNotes || ''}</textarea>
+                                        <button 
+                                            class="action-button save-notes-btn" 
+                                            onclick="guardarNotas('${doc.id}')"
+                                            style="margin-top: 8px;"
+                                        >
+                                            <i class="fas fa-save"></i> Guardar Notas
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Área de Resposta ao Cliente -->
+                                    <div class="notes-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; background-color: #e3f2fd;">
+                                        <h4>Resposta ao Cliente:</h4>
+                                        <textarea 
+                                            class="admin-response" 
+                                            data-message-id="${doc.id}"
+                                            style="width: 100%; min-height: 80px; padding: 8px; margin: 8px 0; border: 1px solid #90caf9; border-radius: 4px;"
+                                            placeholder="Insira aqui uma resposta formal para o cliente..."
+                                        >${message.adminResponse || ''}</textarea>
+                                        <button 
+                                            class="action-button save-response-btn" 
+                                            onclick="guardarResposta('${doc.id}')"
+                                            style="margin-top: 8px; background: linear-gradient(135deg, #1565C0, #42a5f5);"
+                                        >
+                                            <i class="fas fa-paper-plane"></i> Enviar Resposta
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="message-footer">
+                                    <span class="message-status ${message.status === 'resolved' ? 'status-resolved' : 'status-pending'}">
+                                        ${message.status === 'resolved' ? 'Resolvido' : 'Pendente'}
+                                    </span>
+                                    <div class="button-group">
+                                        <button class="action-button" onclick="alternarEstado('${doc.id}', '${message.status}')">
+                                            ${message.status === 'resolved' ? 'Marcar como Pendente' : 'Marcar como Resolvido'}
+                                        </button>
+                                        <button class="action-button delete-button" onclick="deleteMessage('${doc.id}')">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        messagesList.innerHTML += messageCard;
+                    });
+                }, (error) => {
+                    console.error("Erro ao carregar mensagens:", error);
+                    alert("Erro ao carregar mensagens. Verifique a consola para mais detalhes.");
+                });
+        }
+
+        // Função para alternar o estado da mensagem
+        async function alternarEstado(messageId, currentStatus) {
+            const newStatus = currentStatus === 'resolved' ? 'pending' : 'resolved';
+            try {
+                await db.collection('messages').doc(messageId).update({
+                    status: newStatus
+                });
+            } catch (error) {
+                console.error('Erro ao atualizar estado:', error);
+                alert('Erro ao atualizar estado da mensagem.');
+            }
+        }
+
+        // Nova função para deletar mensagem
+        async function deleteMessage(messageId) {
+            if (confirm('Tem a certeza que deseja eliminar esta mensagem?')) {
+                try {
+                    await db.collection('messages').doc(messageId).delete();
+                    console.log('Mensagem eliminada com sucesso');
+                } catch (error) {
+                    console.error('Erro ao eliminar mensagem:', error);
+                    alert('Erro ao eliminar mensagem.');
+                }
+            }
+        }
+
+        // Nova função para guardar notas
+        async function guardarNotas(messageId) {
+            const textarea = document.querySelector(`textarea[data-message-id="${messageId}"]`);
+            const notes = textarea.value.trim();
+
+            try {
+                await db.collection('messages').doc(messageId).update({
+                    adminNotes: notes,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Feedback visual
+                const saveBtn = textarea.nextElementSibling;
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-check"></i> Guardado!';
+                saveBtn.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.style.backgroundColor = '';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Erro ao guardar notas:', error);
+                alert('Erro ao guardar notas. Por favor, tente novamente.');
+            }
+        }
+
+        // Nova função para guardar a resposta ao cliente
+        async function guardarResposta(messageId) {
+            const textarea = document.querySelector(`textarea.admin-response[data-message-id="${messageId}"]`);
+            const response = textarea.value.trim();
+
+            try {
+                await db.collection('messages').doc(messageId).update({
+                    adminResponse: response,
+                    responseDate: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Feedback visual
+                const saveBtn = textarea.nextElementSibling;
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-check"></i> Resposta Enviada!';
+                saveBtn.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.style.backgroundColor = '';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Erro ao enviar resposta:', error);
+                alert('Erro ao enviar resposta. Por favor, tente novamente.');
+            }
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            document.getElementById('searchMessages').addEventListener('input', filterMessages);
+            document.getElementById('filterStatus').addEventListener('change', filterMessages);
+        }
+
+        // Função para filtrar mensagens
+        function filterMessages() {
+            const searchTerm = document.getElementById('searchMessages').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const messageCards = document.querySelectorAll('.message-card');
+
+            messageCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                const status = card.querySelector('.message-status').classList.contains('status-resolved') ? 'resolved' : 'pending';
+                
+                const matchesSearch = text.includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || status === statusFilter;
+
+                card.style.display = matchesSearch && matchesStatus ? 'block' : 'none';
+            });
+        }
+    </script>
+</body>
+</html> 

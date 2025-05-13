@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Área - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary-color: #1e3d59;
+            --secondary-color: #2c5282;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --background-color: #f8fafb;
+            --card-background: #ffffff;
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+            --border-radius: 16px;
+            --box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 100%;
+        }
+
+        .user-area-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+            width: 100%;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            color: white;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+            opacity: 0.1;
+        }
+
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .welcome-section p {
+            font-size: 1.1rem;
+            margin: 0.5rem 0 0;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .logout-btn i {
+            font-size: 1rem;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .action-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+        }
+
+        .action-card i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .action-card h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+        }
+
+        .orders-section {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .order-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .order-status.pending { background: #FFF3E0; color: #E65100; }
+        .order-status.processing { background: #E3F2FD; color: #1565C0; }
+        .order-status.shipped { background: #E8F5E9; color: #2E7D32; }
+        .order-status.delivered { background: #E0F2F1; color: #00695C; }
+        .order-status.cancelled { background: #FFEBEE; color: #B71C1C; }
+
+        .item-size {
+            color: #666;
+            font-size: 0.9em;
+            margin: 0 5px;
+        }
+
+        .order-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .error-message {
+            background: #FFEBEE;
+            color: #B71C1C;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .error-details {
+            font-size: 0.9em;
+            margin-top: 5px;
+            color: #666;
+        }
+
+        .no-orders {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .order-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+        }
+
+        .order-items {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .item-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .item-quantity {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            margin-right: 8px;
+        }
+
+        .item-size {
+            background: #f5f5f5;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            margin: 0 8px;
+        }
+
+        .item-price {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-details {
+            width: 100%;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .summary-details p {
+            margin: 5px 0;
+        }
+
+        .summary-details .total {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1e3d59;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .discount {
+            color: #2ecc71;
+            font-weight: 500;
+        }
+
+        .view-details-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .view-details-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .view-details-btn i {
+            font-size: 1.2rem;
+        }
+
+        footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .user-area-container {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+
+            .welcome-section {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .welcome-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .quick-actions {
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .orders-section {
+                padding: 1rem;
+            }
+
+            .order-card {
+                padding: 1rem;
+            }
+
+            .order-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .order-status {
+                align-self: flex-start;
+            }
+        }
+
+        .messages-section {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            margin-top: 2rem;
+        }
+
+        .message-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .message-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .message-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .message-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .message-status.pending {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+
+        .message-status.in-progress {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+
+        .message-status.resolved {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .message-content {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .admin-response {
+            background: #f8f9fa;
+            border-left: 3px solid #2196F3;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .admin-response-header {
+            color: #1565C0;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .admin-notes {
+            background: #f0f8ff;
+            border-left: 3px solid #4caf50;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .admin-notes-header {
+            color: #2E7D32;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
+        .no-messages i {
+            font-size: 2em;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .response-date {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <!-- Incluir a navegação -->
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <div class="user-area-container">
+        <div class="welcome-section">
+            <h1>Olá, <span id="userName">Utilizador</span>!</h1>
+            <p>Bem-vindo à sua área pessoal</p>
+            <button class="logout-btn" onclick="logoutUser()">
+                <i class="fas fa-sign-out-alt"></i>
+                Terminar Sessão
+            </button>
+        </div>
+
+        <div class="quick-actions">
+            <div class="action-card" onclick="window.location.href='index.html'">
+                <i class="fas fa-home"></i>
+                <h3>Página Inicial</h3>
+            </div>
+            <div class="action-card" onclick="window.location.href='produtos.html'">
+                <i class="fas fa-shopping-bag"></i>
+                <h3>Ir às Compras</h3>
+            </div>
+            <div class="action-card" onclick="window.location.href='cart.html'">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>O Meu Carrinho</h3>
+            </div>
+        </div>
+
+        <div class="orders-section">
+            <div class="section-header">
+                <h2>As Minhas Encomendas</h2>
+            </div>
+            <div id="ordersList" class="orders-list">
+                <!-- Pedidos serão carregados aqui -->
+                <div class="no-orders">
+                    <i class="fas fa-box-open"></i>
+                    <p>A carregar as suas encomendas...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="messages-section">
+            <div class="section-header">
+                <h2>As Minhas Mensagens</h2>
+            </div>
+            <div id="messagesList" class="messages-list">
+                <!-- Mensagens serão carregadas aqui -->
+            </div>
+        </div>
+    </div>
+
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdPF1KwTeC5zzFbsLnkCvx6a2BmWt8iL8",
+            authDomain: "test-58408.firebaseapp.com",
+            projectId: "test-58408",
+            storageBucket: "test-58408.appspot.com",
+            messagingSenderId: "857029748739",
+            appId: "1:857029748739:web:5a85299a0343e54a118636",
+            measurementId: "G-M4YV7HB77W"
+        };
+
+        // Inicializar Firebase
+        let db;
+        let auth;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            auth = firebase.auth();
+            console.log("Firebase inicializado com sucesso");
+        } catch (error) {
+            console.error('Erro ao inicializar Firebase:', error);
+        }
+
+        // Ajustar altura do iframe de navegação
+        document.addEventListener('DOMContentLoaded', function() {
+            const navIframe = document.getElementById('nav-iframe');
+            navIframe.onload = function() {
+                navIframe.style.height = navIframe.contentWindow.document.body.scrollHeight + 'px';
+                
+                // Comunicação com o iframe
+                window.handleAuth = function() {
+                    if (auth.currentUser) {
+                        auth.signOut().then(() => {
+                            window.location.href = 'index.html';
+                        }).catch(error => {
+                            console.error('Erro ao terminar sessão:', error);
+                        });
+                    } else {
+                        window.location.href = 'login.html';
+                    }
+                };
+            };
+        });
+
+        // Verificar estado de autenticação
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                console.log('Utilizador com sessão iniciada:', user.email);
+                document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+                loadUserOrders();
+                loadUserMessages();
+            } else {
+                console.log('Utilizador sem sessão iniciada');
+                // Redirecionar para index.html e abrir o modal de autenticação
+                window.location.href = 'index.html?auth=true';
+            }
+        });
+
+        // Função para terminar sessão do utilizador
+        function logoutUser() {
+            try {
+                auth.signOut().then(() => {
+                    console.log('Utilizador terminou sessão com sucesso');
+                    window.location.href = 'index.html';
+                }).catch((error) => {
+                    console.error('Erro ao terminar sessão:', error);
+                    alert('Ocorreu um erro ao tentar terminar a sessão. Por favor, tente novamente.');
+                });
+            } catch (error) {
+                console.error('Erro ao tentar terminar sessão:', error);
+                alert('Ocorreu um erro ao tentar terminar a sessão. Por favor, tente novamente.');
+            }
+        }
+
+        // Carregar pedidos do utilizador
+        async function loadUserOrders() {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    console.log('Utilizador sem sessão iniciada');
+                    return;
+                }
+
+                console.log('A carregar encomendas para o utilizador:', user.uid);
+                const ordersContainer = document.getElementById('ordersList');
+                
+                // Fazer a consulta ao Firestore
+                const ordersSnapshot = await db.collection('orders')
+                    .where('userId', '==', user.uid)
+                    .get();
+
+                if (ordersSnapshot.empty) {
+                    console.log('Nenhum pedido encontrado');
+                    ordersContainer.innerHTML = `
+                        <div class="no-orders">
+                            <i class="fas fa-box-open"></i>
+                            <p>Ainda não tem encomendas.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let ordersHTML = '';
+                ordersSnapshot.forEach(doc => {
+                    const order = doc.data();
+                    console.log('Pedido encontrado:', doc.id, order);
+
+                    // Formatar a data
+                    let orderDate = new Date();
+                    if (order.createdAt) {
+                        if (order.createdAt.toDate) {
+                            orderDate = order.createdAt.toDate();
+                        } else if (order.createdAt.seconds) {
+                            orderDate = new Date(order.createdAt.seconds * 1000);
+                        }
+                    }
+
+                    // Criar HTML para os itens do pedido
+                    const itemsHTML = order.items.map(item => `
+                        <div class="order-item">
+                            <div class="item-info">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-details">
+                                    <span class="item-quantity">Qtd: ${item.quantity}</span>
+                                    ${item.size ? `<span class="item-size">Tamanho: ${item.size}</span>` : ''}
+                                    <span class="item-price">${item.price.toFixed(2)}€</span>
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    ordersHTML += `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <h3>Pedido #${doc.id}</h3>
+                                    <p class="order-date">${orderDate.toLocaleString('pt-PT')}</p>
+                                </div>
+                                <div class="order-status ${order.status || 'pending'}">
+                                    ${getStatusText(order.status || 'pending')}
+                                </div>
+                            </div>
+                            
+                            <div class="order-content">
+                                <div class="shipping-info">
+                                    <h4>Endereço de Entrega</h4>
+                                    <p>${order.shipping?.name || ''}</p>
+                                    <p>${order.shipping?.address || ''}</p>
+                                    <p>${order.shipping?.postalCode || ''} ${order.shipping?.city || ''}</p>
+                                    <p>Telefone: ${order.shipping?.phone || ''}</p>
+                                </div>
+                                
+                                <div class="items-list">
+                                    <h4>Itens da Encomenda</h4>
+                                    ${itemsHTML}
+                                </div>
+                                
+                                <div class="order-summary">
+                                    <div class="summary-details">
+                                        <p>Subtotal: ${(order.subtotal || 0).toFixed(2)}€</p>
+                                        ${order.discount ? `
+                                            <p class="discount">Desconto: -${(order.discount.discountAmount || 0).toFixed(2)}€</p>
+                                        ` : ''}
+                                        <p class="total">Total: ${(order.total || 0).toFixed(2)}€</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                ordersContainer.innerHTML = ordersHTML;
+                console.log('Pedidos carregados com sucesso');
+
+            } catch (error) {
+                console.error('Erro ao carregar pedidos:', error);
+                const ordersContainer = document.getElementById('ordersList');
+                ordersContainer.innerHTML = `
+                    <div class="error-message">
+                        <p>Ocorreu um erro ao carregar as suas encomendas.</p>
+                        <p class="error-details">Detalhes: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Função auxiliar para converter status em texto amigável
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Pendente',
+                'processing': 'Em Processamento',
+                'shipped': 'Enviado',
+                'delivered': 'Entregue',
+                'cancelled': 'Cancelado'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Função para carregar mensagens do utilizador
+        async function loadUserMessages() {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    console.log('Utilizador sem sessão iniciada');
+                    return;
+                }
+
+                console.log('Tentando carregar mensagens para:', user.email);
+                const messagesContainer = document.getElementById('messagesList');
+                
+                // Buscar mensagens do utilizador
+                const messagesSnapshot = await db.collection('messages')
+                    .where('email', '==', user.email)
+                    .get();
+
+                if (messagesSnapshot.empty) {
+                    console.log('Nenhuma mensagem encontrada');
+                    messagesContainer.innerHTML = `
+                        <div class="no-messages">
+                            <i class="far fa-comment-dots"></i>
+                            <p>Ainda não tem mensagens.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let messagesHTML = '';
+                messagesSnapshot.forEach(doc => {
+                    const message = doc.data();
+                    console.log('Mensagem encontrada:', message);
+
+                    const messageDate = message.timestamp ? 
+                        new Date(message.timestamp.seconds * 1000).toLocaleString('pt-PT') : 
+                        'Data não disponível';
+
+                    const statusText = {
+                        'pending': 'Pendente',
+                        'in-progress': 'Em Análise',
+                        'resolved': 'Resolvido'
+                    };
+
+                    messagesHTML += `
+                        <div class="message-card">
+                            <div class="message-header">
+                                <div class="message-info">
+                                    <h3>Mensagem #${doc.id}</h3>
+                                    <span class="message-date">${messageDate}</span>
+                                </div>
+                                <div class="message-status ${message.status || 'pending'}">
+                                    ${statusText[message.status || 'pending']}
+                                </div>
+                            </div>
+                            <div class="message-content">
+                                <p>${message.message}</p>
+                            </div>
+                            ${message.adminResponse ? `
+                                <div class="admin-response">
+                                    <div class="admin-response-header">
+                                        <i class="fas fa-reply"></i> Resposta da Administração
+                                    </div>
+                                    <p>${message.adminResponse}</p>
+                                    ${message.responseDate ? `
+                                        <div class="response-date">
+                                            <i class="far fa-clock"></i> ${new Date(message.responseDate.seconds * 1000).toLocaleString('pt-PT')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                            ${message.adminNotes ? `
+                                <div class="admin-notes">
+                                    <div class="admin-notes-header">
+                                        <i class="fas fa-sticky-note"></i> Notas Adicionais
+                                    </div>
+                                    <p>${message.adminNotes}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+
+                messagesContainer.innerHTML = messagesHTML;
+                console.log('Mensagens carregadas com sucesso');
+
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+                const messagesContainer = document.getElementById('messagesList');
+                messagesContainer.innerHTML = `
+                    <div class="error-message">
+                        <p>Ocorreu um erro ao carregar as suas mensagens.</p>
+                        <p class="error-details">Detalhes: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

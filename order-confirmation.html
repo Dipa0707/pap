@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encomenda Confirmada - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <main class="confirmation-container">
+        <div class="confirmation-content">
+            <i class="fas fa-check-circle"></i>
+            <h1>Encomenda Confirmada!</h1>
+            <p>A sua encomenda foi realizada com sucesso.</p>
+            <div id="orderDetails">
+                <h2>Detalhes da Encomenda</h2>
+                <p>Número da encomenda: <span id="orderId"></span></p>
+                <div id="orderItems"></div>
+                <p class="total">Total: <span id="orderTotal"></span></p>
+            </div>
+            <a href="index.html" class="btn">Voltar para a Loja</a>
+        </div>
+    </main>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdPF1KwTeC5zzFbsLnkCvx6a2BmWt8iL8",
+            authDomain: "test-58408.firebaseapp.com",
+            projectId: "test-58408",
+            storageBucket: "test-58408.appspot.com",
+            messagingSenderId: "857029748739",
+            appId: "1:857029748739:web:5a85299a0343e54a118636",
+            measurementId: "G-M4YV7HB77W"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // Carregar detalhes do pedido
+        async function loadOrderDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('id');
+            
+            if (!orderId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const orderDoc = await db.collection('orders').doc(orderId).get();
+                if (!orderDoc.exists) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const order = orderDoc.data();
+                document.getElementById('orderId').textContent = orderId;
+                
+                const orderItems = document.getElementById('orderItems');
+                order.items.forEach(item => {
+                    orderItems.innerHTML += `
+                        <div class="order-item">
+                            <span>${item.name} x ${item.quantity}</span>
+                            <span>${item.subtotal.toFixed(2)}€</span>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('orderTotal').textContent = `${order.total.toFixed(2)}€`;
+            } catch (error) {
+                console.error('Erro ao carregar pedido:', error);
+                alert('Erro ao carregar detalhes da encomenda');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadOrderDetails);
+    </script>
+    
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+</body>
+</html> 

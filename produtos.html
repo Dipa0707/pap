@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DanielFish</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <script src="auth.js"></script>
+    <script src="productManager.js"></script>
+</head>
+<body>
+    <!-- Include Navigation -->
+    <iframe src="nav.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()"></iframe>
+
+    <main>
+        <div class="page-header">
+            <h1 id="pageTitle">Produtos</h1>
+            <div class="filters">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Procurar produtos..." 
+                >
+                <select id="priceFilter">
+                    <option value="todos">Todos os Preços</option>
+                    <option value="0-50">€0 - €50</option>
+                    <option value="51-100">€51 - €100</option>
+                    <option value="101-200">€101 - €200</option>
+                    <option value="201+">€201+</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="products-container">
+            <div id="products-container" class="products-grid">
+                <!-- Produtos serão carregados aqui dinamicamente -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Função para obter parâmetros da URL
+        function getUrlParameter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('categoria');
+        }
+
+        // Função para atualizar o título e placeholder baseado na categoria
+        function updatePageInfo(categoria) {
+            const titleElement = document.getElementById('pageTitle');
+            const searchInput = document.getElementById('searchInput');
+            
+            const categoryInfo = {
+                'canas': {
+                    title: 'Canas de Pesca',
+                    placeholder: 'Procurar canas...'
+                },
+                'carretos': {
+                    title: 'Carretos',
+                    placeholder: 'Procurar carretos...'
+                },
+                'roupa': {
+                    title: 'Roupa de Pesca',
+                    placeholder: 'Procurar roupas...'
+                },
+                'outros': {
+                    title: 'Outros Produtos',
+                    placeholder: 'Procurar produtos...'
+                },
+                'todos': {
+                    title: 'Todos os Produtos',
+                    placeholder: 'Procurar produtos...'
+                }
+            };
+
+            const info = categoryInfo[categoria] || categoryInfo['todos'];
+            titleElement.textContent = info.title;
+            searchInput.placeholder = info.placeholder;
+            document.title = `${info.title} - DanielFish`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const categoria = getUrlParameter() || 'todos';
+            updatePageInfo(categoria);
+            productManager.loadProducts(categoria === 'todos' ? null : categoria);
+        });
+    </script>
+    
+    <iframe src="footer.html" frameborder="0" width="100%" onload="this.before((this.contentDocument.body||this.contentDocument).children[0]);this.remove()" style="display: block;"></iframe>
+</body>
+</html> 

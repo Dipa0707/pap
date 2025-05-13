@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Códigos de Desconto - DanielFish</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        .admin-hero {
+            background: linear-gradient(135deg, #1e3d59, #2196F3);
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .admin-hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .admin-hero p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .discount-form {
+            background: linear-gradient(to right bottom, #ffffff, #f8f9fa);
+            padding: 25px;
+            border-radius: 12px;
+            color: rgb(0, 0, 0);
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .discount-form input,
+        .discount-form select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .discount-form button {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            width: auto;
+            margin: 10px 5px;
+        }
+
+        .discount-form button:hover {
+            background: linear-gradient(135deg, #2c5282, #1e3d59);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .discount-list {
+            margin-top: 30px;
+        }
+
+        .discount-item {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(to right bottom, #ffffff, #f8f9fa);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        .discount-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.15);
+        }
+
+        .discount-item .code {
+            font-weight: bold;
+            font-size: 1.2em;
+            flex: 1;
+        }
+
+        .discount-item .details {
+            flex: 2;
+            padding: 0 15px;
+        }
+
+        .discount-item .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .discount-item button.edit-btn {
+            background: linear-gradient(135deg, #1e3d59, #2c5282);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .discount-item button.delete-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .discount-item button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .search-filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-width: 150px;
+            font-size: 1em;
+        }
+
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-inactive {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            background-color: #f0f2f5;
+        }
+        
+        nav a.active {
+            background-color: #f0f2f5;
+            color: #2c5282;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ef 100%);
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex;">
+        <!-- Navbar Vertical -->
+        <nav style="
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            width: 250px;
+            min-height: 100vh;
+            padding: 20px 0;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        ">
+            <div style="
+                display: flex;
+                flex-direction: column;
+                padding: 0 20px;
+            ">
+                <a href="index.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-home"></i>
+                    Início
+                </a>
+                <a href="admin.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-plus"></i>
+                    Produtos
+                </a>
+                <a href="codigosadmin.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    background-color: #f0f2f5;
+                ">
+                    <i class="fas fa-tag"></i>
+                    Códigos de Desconto
+                </a>
+                <a href="pedidos.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-shopping-cart"></i>
+                    Consultar Pedidos
+                </a>
+                <a href="suporte.html" style="
+                    text-decoration: none;
+                    color: #1e3d59;
+                    font-weight: 500;
+                    padding: 12px 20px;
+                    margin: 5px 0;
+                    border-radius: 6px;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas fa-headset"></i>
+                    Apoio ao Cliente
+                </a>
+            </div>
+        </nav>
+
+        <!-- Conteúdo Principal -->
+        <main>
+            <div class="admin-container">
+                <!-- Formulário para adicionar/editar códigos de desconto -->
+                <section class="discount-form">
+                    <h2>Adicionar/Editar Código de Desconto</h2>
+                    <form id="discountForm">
+                        <input type="hidden" id="discountId">
+                        <input type="text" id="discountCode" placeholder="Código" required>
+                        <input type="number" id="discountValue" placeholder="Valor do desconto" min="1" max="100" required>
+                        <select id="discountType" required>
+                            <option value="">Tipo de desconto</option>
+                            <option value="percentage">Percentagem (%)</option>
+                            <option value="fixed">Valor Fixo (€)</option>
+                        </select>
+                        <input type="date" id="startDate" placeholder="Data de Início">
+                        <input type="date" id="endDate" placeholder="Data de Expiração">
+                        <input type="number" id="usageLimit" placeholder="Limite de Utilizações (opcional)" min="1">
+                        <select id="discountStatus">
+                            <option value="active">Ativo</option>
+                            <option value="inactive">Inativo</option>
+                        </select>
+                        <button type="submit" id="submitButton">Adicionar Código</button>
+                        <button type="button" id="resetButton">Limpar Formulário</button>
+                    </form>
+                </section>
+
+                <!-- Lista de códigos de desconto -->
+                <section class="discount-list">
+                    <h2>Lista de Códigos de Desconto</h2>
+                    <div class="search-filter-container">
+                        <input type="text" id="searchDiscounts" placeholder="Procurar códigos..." class="search-input">
+                        <select id="filterStatus" class="filter-select">
+                            <option value="">Todos os estados</option>
+                            <option value="active">Ativos</option>
+                            <option value="inactive">Inativos</option>
+                        </select>
+                    </div>
+                    <div id="discountsList">
+                        <!-- Códigos de desconto serão carregados aqui dinamicamente -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdPF1KwTeC5zzFbsLnkCvx6a2BmWt8iL8",
+            authDomain: "test-58408.firebaseapp.com",
+            projectId: "test-58408",
+            storageBucket: "test-58408.appspot.com",
+            messagingSenderId: "857029748739",
+            appId: "1:857029748739:web:5a85299a0343e54a118636",
+            measurementId: "G-M4YV7HB77W"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Verificar se o utilizador é admin
+        firebase.auth().onAuthStateChanged(async function(user) {
+            if (user) {
+                try {
+                    // Procurar dados do utilizador no Firestore
+                    const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                    
+                    // Verificar se é admin
+                    if (userDoc.exists && userDoc.data().isAdmin) {
+                        // Utilizador é admin, pode continuar na página
+                        console.log('Utilizador admin verificado');
+                        loadDiscounts();
+                    } else {
+                        // Utilizador não é admin, redirecionar
+                        console.log('Utilizador não é admin');
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    console.error('Erro ao verificar permissões:', error);
+                    window.location.href = 'index.html';
+                }
+            } else {
+                // Utilizador sem sessão iniciada
+                console.log('Utilizador sem sessão iniciada');
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Manipular envio do formulário
+        document.getElementById('discountForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const discountData = {
+                code: document.getElementById('discountCode').value.toUpperCase(),
+                value: parseFloat(document.getElementById('discountValue').value),
+                type: document.getElementById('discountType').value,
+                startDate: document.getElementById('startDate').value || null,
+                endDate: document.getElementById('endDate').value || null,
+                usageLimit: document.getElementById('usageLimit').value ? parseInt(document.getElementById('usageLimit').value) : null,
+                usageCount: 0,
+                status: document.getElementById('discountStatus').value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            const discountId = document.getElementById('discountId').value;
+
+            try {
+                if (discountId) {
+                    // Atualizar código existente
+                    await db.collection('discountCodes').doc(discountId).update({
+                        ...discountData,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    alert('Código de desconto atualizado com sucesso!');
+                } else {
+                    // Verificar se o código já existe
+                    const codeSnapshot = await db.collection('discountCodes')
+                        .where('code', '==', discountData.code)
+                        .get();
+                    
+                    if (!codeSnapshot.empty) {
+                        alert('Este código já existe. Por favor, escolha outro código.');
+                        return;
+                    }
+                    
+                    // Adicionar novo código
+                    await db.collection('discountCodes').add(discountData);
+                    alert('Código de desconto adicionado com sucesso!');
+                }
+
+                resetForm();
+                loadDiscounts();
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao guardar o código de desconto');
+            }
+        });
+
+        // Resetar formulário
+        document.getElementById('resetButton').addEventListener('click', resetForm);
+
+        function resetForm() {
+            document.getElementById('discountForm').reset();
+            document.getElementById('discountId').value = '';
+            document.getElementById('submitButton').textContent = 'Adicionar Código';
+        }
+
+        // Carregar códigos de desconto
+        async function loadDiscounts() {
+            const discountsList = document.getElementById('discountsList');
+            discountsList.innerHTML = '';
+
+            try {
+                const snapshot = await db.collection('discountCodes').orderBy('createdAt', 'desc').get();
+                
+                if (snapshot.empty) {
+                    discountsList.innerHTML = '<p>Nenhum código de desconto encontrado.</p>';
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const discount = doc.data();
+                    const discountElement = document.createElement('div');
+                    discountElement.className = 'discount-item';
+                    discountElement.dataset.status = discount.status;
+                    
+                    // Formatar valor do desconto
+                    const formattedValue = discount.type === 'percentage' 
+                        ? `${discount.value}%` 
+                        : `${discount.value}€`;
+                    
+                    // Formatar datas
+                    const startDate = discount.startDate ? new Date(discount.startDate).toLocaleDateString() : 'N/A';
+                    const endDate = discount.endDate ? new Date(discount.endDate).toLocaleDateString() : 'N/A';
+                    
+                    // Verificar se o código está expirado
+                    let statusClass = discount.status === 'active' ? 'status-active' : 'status-inactive';
+                    let statusText = discount.status === 'active' ? 'Ativo' : 'Inativo';
+                    
+                    if (discount.status === 'active' && discount.endDate) {
+                        const now = new Date();
+                        const expiry = new Date(discount.endDate);
+                        if (now > expiry) {
+                            statusClass = 'status-inactive';
+                            statusText = 'Expirado';
+                        }
+                    }
+                    
+                    discountElement.innerHTML = `
+                        <div class="code">${discount.code}</div>
+                        <div class="details">
+                            <p><strong>Valor:</strong> ${formattedValue}</p>
+                            <p><strong>Período:</strong> ${startDate} até ${endDate}</p>
+                            <p><strong>Utilizações:</strong> ${discount.usageCount || 0}${discount.usageLimit ? ' / ' + discount.usageLimit : ''}</p>
+                            <p><strong>Estado:</strong> <span class="${statusClass}">${statusText}</span></p>
+                        </div>
+                        <div class="actions">
+                            <button class="edit-btn" onclick="editDiscount('${doc.id}')">Editar</button>
+                            <button class="delete-btn" onclick="deleteDiscount('${doc.id}')">Eliminar</button>
+                        </div>
+                    `;
+                    
+                    discountsList.appendChild(discountElement);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar códigos de desconto:', error);
+                discountsList.innerHTML = '<p>Erro ao carregar códigos de desconto.</p>';
+            }
+        }
+
+        // Editar código de desconto
+        async function editDiscount(discountId) {
+            try {
+                const doc = await db.collection('discountCodes').doc(discountId).get();
+                if (!doc.exists) {
+                    console.error('Código não encontrado');
+                    return;
+                }
+
+                const discount = doc.data();
+                
+                document.getElementById('discountId').value = discountId;
+                document.getElementById('discountCode').value = discount.code;
+                document.getElementById('discountValue').value = discount.value;
+                document.getElementById('discountType').value = discount.type;
+                document.getElementById('startDate').value = discount.startDate || '';
+                document.getElementById('endDate').value = discount.endDate || '';
+                document.getElementById('usageLimit').value = discount.usageLimit || '';
+                document.getElementById('discountStatus').value = discount.status;
+                document.getElementById('submitButton').textContent = 'Atualizar Código';
+                
+                // Scroll suave até o formulário
+                document.querySelector('.discount-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (error) {
+                console.error('Erro ao carregar código de desconto:', error);
+                alert('Erro ao carregar código de desconto');
+            }
+        }
+
+        // Excluir código de desconto
+        async function deleteDiscount(discountId) {
+            if (confirm('Tem a certeza de que deseja eliminar este código de desconto?')) {
+                try {
+                    await db.collection('discountCodes').doc(discountId).delete();
+                    loadDiscounts();
+                    alert('Código de desconto excluído com sucesso!');
+                } catch (error) {
+                    console.error('Erro ao excluir código de desconto:', error);
+                    alert('Erro ao excluir o código de desconto');
+                }
+            }
+        }
+
+        // Filtrar códigos de desconto
+        document.getElementById('searchDiscounts').addEventListener('input', filterDiscounts);
+        document.getElementById('filterStatus').addEventListener('change', filterDiscounts);
+
+        function filterDiscounts() {
+            const searchTerm = document.getElementById('searchDiscounts').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const discountItems = document.querySelectorAll('.discount-item');
+
+            discountItems.forEach(item => {
+                const code = item.querySelector('.code').textContent.toLowerCase();
+                const status = item.dataset.status;
+
+                const matchesSearch = code.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                item.style.display = matchesSearch && matchesStatus ? 'flex' : 'none';
+            });
+        }
+    </script>
+</body>
+</html> 
